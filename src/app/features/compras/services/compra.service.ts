@@ -25,6 +25,16 @@ export class CompraService {
     });
   }
 
+  buscarPorRangoFechas(fechaInicio: string, fechaFin: string): Observable<CompraDTO[]> {
+    return this.http.get<CompraDTO[]>(`${this.apiUrl}/buscar-rango-fechas`, {
+      params: { fechaInicio, fechaFin }
+    });
+  }
+
+  buscarPorId(id: number): Observable<CompraDTO> {
+    return this.http.get<CompraDTO>(`${this.apiUrl}/buscar/${id}`);
+  }
+
   obtenerNombreUsuario(idUsuario: number): Observable<string> {
     return this.http.get<string>(`${this.apiUrl}/usuario-nombre/${idUsuario}`);
   }

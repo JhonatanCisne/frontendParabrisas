@@ -30,4 +30,8 @@ export class UsuarioService {
   eliminarPorCorreo(correo: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/eliminar/${correo}`);
   }
+
+  listarTodos(): Observable<UsuarioDTO[]> {
+    return this.http.get<UsuarioDTO[]>(`${this.apiUrl}/listar`);
+  }
 }

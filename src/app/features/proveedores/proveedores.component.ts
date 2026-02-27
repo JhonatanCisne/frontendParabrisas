@@ -7,8 +7,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ProveedorService } from './services/proveedor.service';
 import { ProveedorDTO } from '../../shared/models';
 
@@ -22,7 +24,9 @@ import { ProveedorDTO } from '../../shared/models';
     MatIconModule,
     MatDialogModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatSnackBarModule,
+    MatSelectModule
   ],
   template: `
     <div>
@@ -47,13 +51,6 @@ import { ProveedorDTO } from '../../shared/models';
             <td mat-cell *matCellDef="let element">{{ element.nombreProveedor }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="contacto">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
-              Contacto
-            </th>
-            <td mat-cell *matCellDef="let element">{{ element.contacto }}</td>
-          </ng-container>
-
           <ng-container matColumnDef="telefono">
             <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
               Teléfono
@@ -61,18 +58,31 @@ import { ProveedorDTO } from '../../shared/models';
             <td mat-cell *matCellDef="let element">{{ element.telefono }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="email">
+          <ng-container matColumnDef="direccion">
             <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
-              Email
+              Dirección
             </th>
-            <td mat-cell *matCellDef="let element">{{ element.email }}</td>
+            <td mat-cell *matCellDef="let element">{{ element.direccion }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="ciudad">
+          <ng-container matColumnDef="estadoCredito">
             <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
-              Ciudad
+              Estado de Crédito
             </th>
-            <td mat-cell *matCellDef="let element">{{ element.ciudad }}</td>
+            <td mat-cell *matCellDef="let element">
+              <span class="px-3 py-1 rounded-full text-sm font-medium" [ngClass]="getEstadoClass(element.estadoCredito)">
+                {{ element.estadoCredito || 'Sin Definir' }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="montoCredito">
+            <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
+              Monto de Crédito
+            </th>
+            <td mat-cell *matCellDef="let element">
+              {{ element.montoCredito ? (element.montoCredito | currency : 'PEN' : 'S/') : 'Sin Definir' }}
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="acciones">
@@ -87,6 +97,14 @@ import { ProveedorDTO } from '../../shared/models';
                 matTooltip="Editar"
               >
                 <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="accent"
+                (click)="editarCredito(element)"
+                matTooltip="Editar Crédito"
+              >
+                <mat-icon>credit_card</mat-icon>
               </button>
               <button
                 mat-icon-button
@@ -134,9 +152,14 @@ import { ProveedorDTO } from '../../shared/models';
 export class ProveedoresComponent implements OnInit {
   proveedores: ProveedorDTO[] = [];
   isLoading = false;
-  displayedColumns: string[] = ['nombre', 'contacto', 'telefono', 'email', 'ciudad', 'acciones'];
+  displayedColumns: string[] = ['nombre', 'telefono', 'direccion', 'estadoCredito', 'montoCredito', 'acciones'];
 
-  constructor(private proveedorService: ProveedorService, private dialog: MatDialog, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private proveedorService: ProveedorService,
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
     this.cargarProveedores();
@@ -155,6 +178,7 @@ export class ProveedoresComponent implements OnInit {
         this.isLoading = false;
         this.cdr.detectChanges();
         console.error('Error cargando proveedores:', error);
+        this.snackBar.open('Error al cargar proveedores', 'Cerrar', { duration: 5000 });
       }
     });
   }
@@ -165,6 +189,12 @@ export class ProveedoresComponent implements OnInit {
       data: { proveedor: null }
     }).afterClosed().subscribe((result) => {
       if (result) {
+        this.snackBar.open('Proveedor creado correctamente: ' + result.nombreProveedor, 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['success-snackbar']
+        });
         this.cargarProveedores();
       }
     });
@@ -176,6 +206,12 @@ export class ProveedoresComponent implements OnInit {
       data: { proveedor }
     }).afterClosed().subscribe((result) => {
       if (result) {
+        this.snackBar.open('Proveedor actualizado correctamente', 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['success-snackbar']
+        });
         this.cargarProveedores();
       }
     });
@@ -185,12 +221,52 @@ export class ProveedoresComponent implements OnInit {
     if (confirm('¿Está seguro de que desea eliminar este proveedor?')) {
       this.proveedorService.eliminarProveedor(id).subscribe({
         next: () => {
+          this.snackBar.open('Proveedor eliminado correctamente', 'Cerrar', {
+            duration: 5000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar']
+          });
           this.cargarProveedores();
         },
         error: (error) => {
           console.error('Error eliminando proveedor:', error);
+          this.snackBar.open('Error al eliminar proveedor', 'Cerrar', { duration: 5000 });
         }
       });
+    }
+  }
+
+  editarCredito(proveedor: ProveedorDTO): void {
+    this.dialog.open(ProveedorCreditoDialogComponent, {
+      width: '500px',
+      data: { proveedor }
+    }).afterClosed().subscribe((result) => {
+      if (result) {
+        this.snackBar.open('Crédito del proveedor actualizado correctamente', 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['success-snackbar']
+        });
+        this.cargarProveedores();
+      }
+    });
+  }
+
+  getEstadoClass(estado: string | null | undefined): string {
+    if (!estado) return 'bg-gray-100 text-gray-800';
+    
+    const estadoUpper = estado.toUpperCase();
+    switch (estadoUpper) {
+      case 'ACTIVO':
+        return 'bg-green-100 text-green-800';
+      case 'INACTIVO':
+        return 'bg-red-100 text-red-800';
+      case 'SUSPENDIDO':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   }
 }
@@ -222,31 +298,19 @@ export class ProveedoresComponent implements OnInit {
         </mat-form-field>
 
         <mat-form-field class="w-full">
-          <mat-label>Contacto</mat-label>
-          <input matInput formControlName="contacto" required />
-        </mat-form-field>
-
-        <mat-form-field class="w-full">
           <mat-label>Teléfono</mat-label>
           <input matInput formControlName="telefono" required />
-        </mat-form-field>
-
-        <mat-form-field class="w-full">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" required />
-          <mat-error *ngIf="form.get('email')?.hasError('email')">
-            Email inválido
+          <mat-error *ngIf="form.get('telefono')?.hasError('required')">
+            El teléfono es requerido
           </mat-error>
         </mat-form-field>
 
         <mat-form-field class="w-full">
           <mat-label>Dirección</mat-label>
           <input matInput formControlName="direccion" required />
-        </mat-form-field>
-
-        <mat-form-field class="w-full">
-          <mat-label>Ciudad</mat-label>
-          <input matInput formControlName="ciudad" required />
+          <mat-error *ngIf="form.get('direccion')?.hasError('required')">
+            La dirección es requerida
+          </mat-error>
         </mat-form-field>
       </form>
     </mat-dialog-content>
@@ -270,11 +334,8 @@ export class ProveedorFormDialogComponent {
   ) {
     this.form = this.fb.group({
       nombreProveedor: ['', Validators.required],
-      contacto: ['', Validators.required],
       telefono: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      direccion: ['', Validators.required],
-      ciudad: ['', Validators.required]
+      direccion: ['', Validators.required]
     });
 
     if (data.proveedor) {
@@ -307,6 +368,105 @@ export class ProveedorFormDialogComponent {
         }
       });
     }
+  }
+
+  onCancel(): void {
+    this.dialogRef.close();
+  }
+}
+
+@Component({
+  selector: 'app-proveedor-credito-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatDialogModule
+  ],
+  template: `
+    <h2 mat-dialog-title>
+      Editar Crédito de {{ data.proveedor.nombreProveedor }}
+    </h2>
+
+    <mat-dialog-content>
+      <form [formGroup]="form" class="space-y-4">
+        <mat-form-field class="w-full">
+          <mat-label>Estado de Crédito</mat-label>
+          <mat-select formControlName="estadoCredito" required>
+            <mat-option value="Activo">Activo</mat-option>
+            <mat-option value="Inactivo">Inactivo</mat-option>
+            <mat-option value="Suspendido">Suspendido</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+          <mat-label>Monto de Crédito (S/)</mat-label>
+          <input matInput type="number" formControlName="montoCredito" min="0" step="0.01" />
+          <mat-error *ngIf="form.get('montoCredito')?.hasError('min')">
+            El monto debe ser mayor o igual a 0
+          </mat-error>
+        </mat-form-field>
+      </form>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="onCancel()">Cancelar</button>
+      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!form.valid">
+        Guardar
+      </button>
+    </mat-dialog-actions>
+  `
+})
+export class ProveedorCreditoDialogComponent {
+  form: FormGroup;
+
+  constructor(
+    private fb: FormBuilder,
+    private proveedorService: ProveedorService,
+    public dialogRef: MatDialogRef<ProveedorCreditoDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { proveedor: ProveedorDTO }
+  ) {
+    this.form = this.fb.group({
+      estadoCredito: [data.proveedor.estadoCredito || '', Validators.required],
+      montoCredito: [data.proveedor.montoCredito || 0, [Validators.required, Validators.min(0)]]
+    });
+  }
+
+  onSave(): void {
+    if (this.form.invalid) return;
+
+    const estadoCredito = this.form.get('estadoCredito')?.value;
+    const montoCredito = this.form.get('montoCredito')?.value;
+
+    // Actualizar monto de crédito
+    this.proveedorService
+      .actualizarMonto(this.data.proveedor.nombreProveedor, montoCredito)
+      .subscribe({
+        next: () => {
+          // Actualizar estado de crédito mediante PUT
+          const proveedorActualizado: ProveedorDTO = {
+            ...this.data.proveedor,
+            estadoCredito: estadoCredito,
+            montoCredito: montoCredito
+          };
+          
+          this.proveedorService.actualizarProveedor(proveedorActualizado).subscribe({
+            next: (result) => {
+              this.dialogRef.close(result);
+            },
+            error: (error) => {
+              console.error('Error actualizando proveedor:', error);
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error actualizando monto:', error);
+        }
+      });
   }
 
   onCancel(): void {

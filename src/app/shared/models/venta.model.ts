@@ -3,15 +3,15 @@ export interface DetalleVentaListDTO {
   idProducto: number;
   fecha?: string;
   hora?: string;
-  marcaVehiculo?: string;
-  modeloVehiculo?: string;
-  anioVehiculo?: string;
-  calidadVidrio?: string;
-  tipoVidrio?: string;
+  marcaVehiculo: string;
+  modeloVehiculo: string;
+  anioVehiculo: string;
+  calidadVidrio: string;
+  tipoVidrio: string;
   idProveedor?: number;
   precioVenta: number;
   cantidad: number;
-  placaVehiculo?: string;
+  placaVehiculo: string;
 }
 
 export interface VentaDT0 {

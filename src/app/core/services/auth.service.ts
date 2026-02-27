@@ -46,4 +46,29 @@ export class AuthService {
     const usuario = localStorage.getItem('usuario');
     return usuario ? JSON.parse(usuario) : null;
   }
+
+  // Extrae el idUsuario del JWT si no está disponible en el usuario almacenado
+  getCurrentUserId(): number {
+    const usuario = this.getCurrentUser();
+    if (usuario && usuario.idUsuario) {
+      return usuario.idUsuario;
+    }
+
+    // Si no está en el usuario, intentar extraer del JWT
+    const token = this.getToken();
+    if (token) {
+      try {
+        // Decodificar JWT (sin verificación, solo para obtener el payload)
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          return payload.idUsuario;
+        }
+      } catch (error) {
+        console.error('Error al decodificar JWT:', error);
+      }
+    }
+
+    return 0; // Valor por defecto
+  }
 }

@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { UsuarioService } from './services/usuario.service';
 import { UsuarioDTO } from '../../shared/models';
 
@@ -23,7 +24,8 @@ import { UsuarioDTO } from '../../shared/models';
     MatIconModule,
     MatDialogModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatSnackBarModule
   ],
   template: `
     <div>
@@ -129,10 +131,33 @@ export class UsuariosComponent implements OnInit {
   isLoading = false;
   displayedColumns: string[] = ['nombres', 'correo', 'rol', 'acciones'];
 
-  constructor(private usuarioService: UsuarioService, private dialog: MatDialog, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private usuarioService: UsuarioService,
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
-    // Los usuarios se cargan cuando se crea/edita uno
+    this.cargarUsuarios();
+  }
+
+  cargarUsuarios(): void {
+    this.isLoading = true;
+    this.cdr.detectChanges();
+    this.usuarioService.listarTodos().subscribe({
+      next: (data) => {
+        this.usuarios = data;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error cargando usuarios:', error);
+        this.snackBar.open('Error al cargar usuarios', 'Cerrar', { duration: 5000 });
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   openDialog(): void {
@@ -142,6 +167,12 @@ export class UsuariosComponent implements OnInit {
     }).afterClosed().subscribe((result) => {
       if (result) {
         this.agregarUsuarioALista(result);
+        this.snackBar.open('Usuario creado correctamente: ' + result.nombres + ' ' + result.apellidos, 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['success-snackbar']
+        });
       }
     });
   }
@@ -156,6 +187,12 @@ export class UsuariosComponent implements OnInit {
         if (index !== -1) {
           this.usuarios[index] = result;
         }
+        this.snackBar.open('Usuario actualizado correctamente', 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['success-snackbar']
+        });
       }
     });
   }
@@ -165,9 +202,16 @@ export class UsuariosComponent implements OnInit {
       this.usuarioService.eliminarPorCorreo(correo).subscribe({
         next: () => {
           this.usuarios = this.usuarios.filter(u => u.correo !== correo);
+          this.snackBar.open('Usuario eliminado correctamente', 'Cerrar', {
+            duration: 5000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar']
+          });
         },
         error: (error) => {
           console.error('Error eliminando usuario:', error);
+          this.snackBar.open('Error al eliminar usuario', 'Cerrar', { duration: 5000 });
         }
       });
     }

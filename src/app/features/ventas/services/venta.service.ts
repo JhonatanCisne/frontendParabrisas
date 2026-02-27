@@ -29,6 +29,16 @@ export class VentaService {
     return this.http.get<VentaDTO[]>(`${this.apiUrl}/buscar-placa/${placa}`);
   }
 
+  buscarPorRangoFechas(fechaInicio: string, fechaFin: string): Observable<VentaDTO[]> {
+    return this.http.get<VentaDTO[]>(`${this.apiUrl}/buscar-rango-fechas`, {
+      params: { fechaInicio, fechaFin }
+    });
+  }
+
+  buscarPorId(id: number): Observable<VentaDTO> {
+    return this.http.get<VentaDTO>(`${this.apiUrl}/buscar/${id}`);
+  }
+
   obtenerNombreUsuario(idUsuario: number): Observable<string> {
     return this.http.get<string>(`${this.apiUrl}/usuario-nombre/${idUsuario}`);
   }

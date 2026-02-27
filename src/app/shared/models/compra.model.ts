@@ -8,6 +8,7 @@ export interface DetalleListCompraDTO {
   calidadVidrio?: string;
   tipoVidrio?: string;
   costoCompra: number;
+  precioVenta?: number;
   cantidad: number;
 }
 
@@ -20,3 +21,4 @@ export interface CompraDTO {
   totalCompra: number;
   detalle: DetalleListCompraDTO[];
 }
+
