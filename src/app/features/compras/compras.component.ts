@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
@@ -10,10 +10,25 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTabsModule } from '@angular/material/tabs';
 import { CompraService } from './services/compra.service';
 import { ProveedorService } from '../proveedores/services/proveedor.service';
 import { CompraDTO, DetalleListCompraDTO, ProveedorDTO } from '../../shared/models';
 import { AuthService } from '../../core/services/auth.service';
+
+interface DetalleCompraManual {
+  marcaVehiculo: string;
+  modeloVehiculo: string;
+  anioVehiculo: string;
+  tipoVidrio: string;
+  calidadVidrio: string;
+  idProveedor: number;
+  nombreProveedor: string;
+  cantidad: number;
+  costoCompra: number;
+  precioVenta: number;
+  subtotal: number;
+}
 
 @Component({
   selector: 'app-compras',
@@ -29,198 +44,365 @@ import { AuthService } from '../../core/services/auth.service';
     MatTableModule,
     MatProgressSpinnerModule,
     MatCardModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatTabsModule
   ],
   template: `
-    <div>
+    <div class="p-6">
       <h1 class="text-3xl font-bold text-gray-800 mb-6">Ingreso de Inventario (Compras)</h1>
 
-      <div class="grid grid-cols-3 gap-6">
-        <!-- Panel de ingreso de detalles -->
-        <div class="col-span-2">
-          <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-semibold mb-4">Agregar Detalle de Compra</h2>
+      <mat-tab-group>
+        <!-- Pestaña Nueva Compra Manual -->
+        <mat-tab label="Nueva Compra">
+          <div class="mt-6 grid grid-cols-4 gap-6">
+            <!-- Panel de formulario de producto -->
+            <div class="col-span-3">
+              <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Registrar Producto y Compra Manual</h2>
 
-            <form [formGroup]="detalleForm" (ngSubmit)="agregarDetalle()" class="grid grid-cols-4 gap-4">
-              <mat-form-field>
-                <mat-label>ID Producto</mat-label>
-                <input
-                  matInput
-                  type="number"
-                  formControlName="idProducto"
-                  placeholder="123"
-                  required
-                />
-              </mat-form-field>
+                <form [formGroup]="formularioProductoCompra" (ngSubmit)="agregarDetalleALista()" class="grid grid-cols-3 gap-4">
+                  <!-- Fila 1: Marca y Modelo -->
+                  <mat-form-field>
+                    <mat-label>Marca Vehículo</mat-label>
+                    <input matInput formControlName="marcaVehiculo" placeholder="Ej: Chevrolet" />
+                  </mat-form-field>
 
-              <mat-form-field>
-                <mat-label>Cantidad</mat-label>
-                <input
-                  matInput
-                  type="number"
-                  formControlName="cantidad"
-                  placeholder="10"
-                  required
-                />
-              </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>Modelo Vehículo</mat-label>
+                    <input matInput formControlName="modeloVehiculo" placeholder="Ej: Aveo" />
+                  </mat-form-field>
 
-              <mat-form-field>
-                <mat-label>Costo Unitario</mat-label>
-                <input
-                  matInput
-                  type="number"
-                  step="0.01"
-                  formControlName="costoUnitario"
-                  placeholder="0.00"
-                  required
-                />
-              </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>Año</mat-label>
+                    <input matInput type="number" formControlName="anioVehiculo" placeholder="2020" min="1990" max="2050" />
+                  </mat-form-field>
 
-              <button mat-raised-button color="accent" type="submit" [disabled]="!detalleForm.valid">
-                Agregar
-              </button>
-            </form>
-          </div>
+                  <!-- Fila 2: Posición y Tipo de Vidrio -->
+                  <mat-form-field>
+                    <mat-label>Posición Vidrio</mat-label>
+                    <mat-select formControlName="tipoVidrio">
+                      <mat-option value="">Seleccionar</mat-option>
+                      <mat-option value="Delantero">Delantero</mat-option>
+                      <mat-option value="Posterior">Posterior</mat-option>
+                      <mat-option value="Puerta">Puerta</mat-option>
+                    </mat-select>
+                  </mat-form-field>
 
-          <!-- Tabla de detalles -->
-          <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold mb-4">Detalles de Compra</h3>
+                  <mat-form-field>
+                    <mat-label>Tipo Vidrio</mat-label>
+                    <mat-select formControlName="calidadVidrio">
+                      <mat-option value="">Seleccionar</mat-option>
+                      <mat-option value="Templado">Templado</mat-option>
+                      <mat-option value="Laminado">Laminado</mat-option>
+                    </mat-select>
+                  </mat-form-field>
 
-            <div class="max-h-96 overflow-y-auto">
-              <table mat-table [dataSource]="detalleCompras" class="w-full">
-                <ng-container matColumnDef="idProducto">
-                  <th mat-header-cell *matHeaderCellDef>ID Producto</th>
-                  <td mat-cell *matCellDef="let element">{{ element.idProducto }}</td>
-                </ng-container>
+                  <!-- Fila 3: Proveedor -->
+                  <mat-form-field>
+                    <mat-label>Proveedor</mat-label>
+                    <mat-select formControlName="idProveedor">
+                      <mat-option value="">-- Seleccionar Proveedor --</mat-option>
+                      <mat-option *ngFor="let prov of proveedores; trackBy: trackByProveedor" [value]="prov.idProveedor">
+                        {{ prov.nombreProveedor }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
 
-                <ng-container matColumnDef="cantidad">
-                  <th mat-header-cell *matHeaderCellDef>Cantidad</th>
-                  <td mat-cell *matCellDef="let element">{{ element.cantidad }}</td>
-                </ng-container>
+                  <!-- Fila 4: Cantidad y Precios -->
+                  <mat-form-field>
+                    <mat-label>Cantidad</mat-label>
+                    <input matInput type="number" formControlName="cantidad" placeholder="1" min="1" />
+                  </mat-form-field>
 
-                <ng-container matColumnDef="costo">
-                  <th mat-header-cell *matHeaderCellDef>Costo Unitario</th>
-                  <td mat-cell *matCellDef="let element">
-                    {{ element.costoCompra | currency : 'PEN' : 'S/' }}
-                  </td>
-                </ng-container>
+                  <mat-form-field>
+                    <mat-label>Costo Compra (S/)</mat-label>
+                    <input matInput type="number" formControlName="costoCompra" placeholder="0.00" min="0.01" step="0.01" />
+                  </mat-form-field>
 
-                <ng-container matColumnDef="subtotal">
-                  <th mat-header-cell *matHeaderCellDef>Subtotal</th>
-                  <td mat-cell *matCellDef="let element">
-                    {{ (element.costoCompra * element.cantidad) | currency : 'PEN' : 'S/' }}
-                  </td>
-                </ng-container>
+                  <mat-form-field>
+                    <mat-label>Precio Venta (S/)</mat-label>
+                    <input matInput type="number" formControlName="precioVenta" placeholder="0.00" min="0" step="0.01" />
+                  </mat-form-field>
 
-                <ng-container matColumnDef="acciones">
-                  <th mat-header-cell *matHeaderCellDef>Acción</th>
-                  <td mat-cell *matCellDef="let element; let i = index">
-                    <button mat-icon-button color="warn" (click)="eliminarDetalle(i)" size="small">
-                      <mat-icon>delete</mat-icon>
+                  <!-- Botón agregar -->
+                  <div class="col-span-3 flex gap-2">
+                    <button mat-raised-button color="accent" type="submit" [disabled]="!formularioProductoCompra.valid">
+                      Agregar a Lista
                     </button>
-                  </td>
+                    <button mat-raised-button type="button" (click)="limpiarFormularioProducto()">
+                      Limpiar
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Lista de detalles de compra -->
+              <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4">
+                  Detalles de Compra ({{ detallesCompra.length }})
+                </h2>
+
+                <div *ngIf="detallesCompra.length > 0" class="overflow-x-auto">
+                  <table class="w-full border-collapse">
+                    <thead>
+                      <tr class="bg-gray-100">
+                        <th class="border p-3 text-left">Marca</th>
+                        <th class="border p-3 text-left">Modelo</th>
+                        <th class="border p-3 text-left">Año</th>
+                        <th class="border p-3 text-left">Tipo</th>
+                        <th class="border p-3 text-left">Calidad</th>
+                        <th class="border p-3 text-center">Cant.</th>
+                        <th class="border p-3 text-right">Costo Unit.</th>
+                        <th class="border p-3 text-right">P. Venta</th>
+                        <th class="border p-3 text-right">Subtotal</th>
+                        <th class="border p-3 text-center">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let detalle of detallesCompra; let i = index; trackBy: trackByDetalle" class="hover:bg-gray-50 border-b">
+                        <td class="border p-3">{{ detalle.marcaVehiculo }}</td>
+                        <td class="border p-3">{{ detalle.modeloVehiculo }}</td>
+                        <td class="border p-3">{{ detalle.anioVehiculo }}</td>
+                        <td class="border p-3">{{ detalle.tipoVidrio }}</td>
+                        <td class="border p-3">{{ detalle.calidadVidrio }}</td>
+                        <td class="border p-3 text-center font-semibold">{{ detalle.cantidad }}</td>
+                        <td class="border p-3 text-right">{{ detalle.costoCompra | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-3 text-right">{{ detalle.precioVenta | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-3 text-right font-bold text-blue-600">{{ detalle.subtotal | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-3 text-center">
+                          <button mat-raised-button color="warn" (click)="eliminarDetalle(i)" size="small">
+                            Eliminar
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div *ngIf="detallesCompra.length === 0" class="p-8 text-center text-gray-500">
+                  No hay productos agregados. Completa el formulario y presiona "Agregar a Lista"
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel resumen compra -->
+            <div class="col-span-1">
+              <mat-card class="sticky top-6">
+                <mat-card-header>
+                  <mat-card-title>Resumen de Compra</mat-card-title>
+                </mat-card-header>
+
+                <mat-card-content>
+                  <div class="border-t border-b py-4 my-4 space-y-2">
+                    <div class="flex justify-between">
+                      <span>Productos:</span>
+                      <strong>{{ detallesCompra.length }}</strong>
+                    </div>
+                    <div class="flex justify-between">
+                      <span>Total Unidades:</span>
+                      <strong>{{ totalUnidades }}</strong>
+                    </div>
+                    <div class="text-xl font-bold text-blue-600 flex justify-between py-2">
+                      <span>Total Costo:</span>
+                      <span>{{ totalCosto | currency : 'PEN' : 'S/' }}</span>
+                    </div>
+                    <div class="text-lg font-semibold text-green-600 flex justify-between">
+                      <span>Total Venta:</span>
+                      <span>{{ totalVenta | currency : 'PEN' : 'S/' }}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="confirmarCompra()"
+                    [disabled]="detallesCompra.length === 0 || isLoading"
+                    class="w-full py-3 text-lg font-semibold"
+                  >
+                    <span *ngIf="!isLoading">Confirmar Compra</span>
+                    <mat-spinner *ngIf="isLoading" diameter="20" class="inline-block"></mat-spinner>
+                  </button>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Pestaña Buscar Compra -->
+        <mat-tab label="Buscar Compra">
+          <div class="mt-6">
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+              <h2 class="text-xl font-semibold mb-4">Buscar Compra</h2>
+
+              <form [formGroup]="formularioBusquedaCompra" (ngSubmit)="buscarCompra()" class="grid grid-cols-4 gap-4 mb-6">
+                <mat-form-field>
+                  <mat-label>Tipo de Búsqueda</mat-label>
+                  <mat-select formControlName="tipoRangoFechas">
+                    <mat-option value="idCompra">Por ID</mat-option>
+                    <mat-option value="rango">Por Rango de Fechas</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <!-- Búsqueda por ID -->
+                <mat-form-field *ngIf="formularioBusquedaCompra.get('tipoRangoFechas')?.value === 'idCompra'">
+                  <mat-label>ID Compra</mat-label>
+                  <input matInput type="number" formControlName="idCompra" placeholder="1" />
+                </mat-form-field>
+
+                <!-- Búsqueda por Rango de Fechas -->
+                <ng-container *ngIf="formularioBusquedaCompra.get('tipoRangoFechas')?.value === 'rango'">
+                  <mat-form-field>
+                    <mat-label>Fecha Inicio</mat-label>
+                    <input matInput type="date" formControlName="fechaInicio" />
+                  </mat-form-field>
+                  <mat-form-field>
+                    <mat-label>Fecha Fin</mat-label>
+                    <input matInput type="date" formControlName="fechaFin" />
+                  </mat-form-field>
                 </ng-container>
 
-                <tr mat-header-row *matHeaderRowDef="detalleColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: detalleColumns;"></tr>
-              </table>
+                <button mat-raised-button color="primary" type="submit">Buscar</button>
+                <button mat-raised-button type="button" (click)="limpiarBusquedaCompra()">Limpiar</button>
+              </form>
 
-              <div *ngIf="detalleCompras.length === 0" class="p-8 text-center text-gray-500">
-                No hay detalles agregados aún
+              <div *ngIf="isLoadingBusquedaCompra" class="flex justify-center mb-6">
+                <mat-spinner diameter="40"></mat-spinner>
+              </div>
+
+              <!-- Resultado búsqueda -->
+              <div *ngIf="compraEncontrada" class="bg-gray-50 rounded-lg p-6">
+                <h3 class="font-bold text-lg mb-4">Compra #{{ compraEncontrada.idCompra }}</h3>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <p class="text-gray-600">Proveedor:</p>
+                    <p class="font-semibold">{{ compraEncontrada.nombreProveedor }}</p>
+                  </div>
+                  <div>
+                    <p class="text-gray-600">Fecha:</p>
+                    <p class="font-semibold">{{ compraEncontrada.fechaCompra | date : 'short' }}</p>
+                  </div>
+                  <div class="col-span-2">
+                    <p class="text-gray-600">Total:</p>
+                    <p class="font-bold text-blue-600 text-lg">{{ compraEncontrada.totalCompra | currency : 'PEN' : 'S/' }}</p>
+                  </div>
+                </div>
+
+                <h4 class="font-semibold mb-3">Productos:</h4>
+                <div class="overflow-x-auto">
+                  <table class="w-full border-collapse">
+                    <thead>
+                      <tr class="bg-gray-200">
+                        <th class="border p-2 text-left">Marca</th>
+                        <th class="border p-2 text-left">Modelo</th>
+                        <th class="border p-2 text-left">Año</th>
+                        <th class="border p-2 text-center">Cantidad</th>
+                        <th class="border p-2 text-right">Costo</th>
+                        <th class="border p-2 text-right">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of compraEncontrada.detalle; trackBy: trackByDetalleBusqueda" class="border-b">
+                        <td class="border p-2">{{ item.marcaVehiculo || 'N/A' }}</td>
+                        <td class="border p-2">{{ item.modeloVehiculo || 'N/A' }}</td>
+                        <td class="border p-2">{{ item.anioVehiculo || 'N/A' }}</td>
+                        <td class="border p-2 text-center">{{ item.cantidad }}</td>
+                        <td class="border p-2 text-right">{{ item.costoCompra | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-2 text-right font-semibold">{{ (item.costoCompra * item.cantidad) | currency : 'PEN' : 'S/' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div *ngIf="compraNoEncontrada" class="p-6 text-center text-red-600 bg-red-50 rounded-lg">
+                No se encontró compra con ese ID
               </div>
             </div>
           </div>
-        </div>
+        </mat-tab>
 
-        <!-- Panel de resumen y confirmación -->
-        <div class="col-span-1">
-          <mat-card class="sticky top-6">
-            <mat-card-header>
-              <mat-card-title>Resumen de Compra</mat-card-title>
-            </mat-card-header>
+        <!-- Pestaña Historial de Compras -->
+        <mat-tab label="Historial de Compras">
+          <div class="mt-6">
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-xl font-semibold mb-4">Historial de Compras</h2>
 
-            <mat-card-content>
-              <form [formGroup]="compraForm">
-                <mat-form-field class="w-full mb-4">
-                  <mat-label>Proveedor</mat-label>
-                  <mat-select formControlName="nombreProveedor" required>
-                    <mat-option value="">Seleccionar proveedor</mat-option>
-                    <mat-option *ngFor="let prov of proveedores" [value]="prov.nombreProveedor">
-                      {{ prov.nombreProveedor }}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </form>
-
-              <div *ngIf="isLoadingProveedores" class="flex justify-center mb-4">
-                <mat-spinner diameter="30"></mat-spinner>
+              <div *ngIf="isLoadingHistorial" class="flex justify-center py-12">
+                <mat-spinner diameter="40"></mat-spinner>
               </div>
 
-              <!-- Resumen -->
-              <div class="border-t border-b py-4 my-4">
-                <div class="flex justify-between mb-2">
-                  <span>Cantidad de items:</span>
-                  <strong>{{ detalleCompras.length }}</strong>
-                </div>
-
-                <div class="flex justify-between mb-2">
-                  <span>Total Unidades:</span>
-                  <strong>{{ totalUnidades }}</strong>
-                </div>
-
-                <div class="text-right my-4">
-                  <div class="text-2xl font-bold text-blue-600">
-                    Total: {{ totalCompra | currency : 'PEN' : 'S/' }}
-                  </div>
-                </div>
+              <div *ngIf="!isLoadingHistorial && historialCompras.length > 0" class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                  <thead>
+                    <tr class="bg-gray-100">
+                      <th class="border p-3 text-center" style="width: 50px;"></th>
+                      <th class="border p-3 text-left">Importadora / Proveedor</th>
+                      <th class="border p-3 text-right">Monto Total (S/)</th>
+                      <th class="border p-3 text-left">Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <ng-container *ngFor="let compra of historialCompras; trackBy: trackByCompra">
+                      <!-- Fila Resumen -->
+                      <tr class="hover:bg-gray-50 border-b cursor-pointer" (click)="toggleExpandCompra(compra.idCompra || 0)">
+                        <td class="border p-3 text-center">
+                          <mat-icon class="text-gray-600" [ngClass]="{'rotate-90': expandedCompraId === compra.idCompra}">arrow_right</mat-icon>
+                        </td>
+                        <td class="border p-3 font-semibold">{{ compra.nombreProveedor }}</td>
+                        <td class="border p-3 text-right font-bold text-blue-600">{{ compra.totalCompra | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-3">{{ compra.fechaCompra | date : 'short' }}</td>
+                      </tr>
+                      <!-- Filas Detalles (Expandidas) -->
+                      <ng-container *ngIf="expandedCompraId === compra.idCompra && compra.detalle && compra.detalle.length > 0">
+                        <tr *ngFor="let detalle of compra.detalle; trackBy: trackByDetalleCompra" class="bg-blue-50 border-b">
+                          <td class="border p-2"></td>
+                          <td class="border p-2 text-sm">
+                            <span class="font-semibold">{{ detalle.marcaVehiculo }} {{ detalle.modeloVehiculo }}</span>
+                            <br/>
+                            <span class="text-gray-600 text-xs">{{ detalle.tipoVidrio }} • {{ detalle.calidadVidrio }}</span>
+                          </td>
+                          <td class="border p-2 text-right">
+                            <div class="text-sm">Cant: {{ detalle.cantidad }}</div>
+                            <div class="font-semibold text-blue-600">{{ (detalle.costoCompra * detalle.cantidad) | currency : 'PEN' : 'S/' }}</div>
+                          </td>
+                          <td class="border p-2"></td>
+                        </tr>
+                      </ng-container>
+                    </ng-container>
+                  </tbody>
+                </table>
               </div>
 
-              <button
-                mat-raised-button
-                color="primary"
-                (click)="confirmarCompra()"
-                [disabled]="detalleCompras.length === 0 || !compraForm.valid || isLoading"
-                class="w-full py-3 text-lg font-semibold"
-              >
-                <span *ngIf="!isLoading">Confirmar Compra</span>
-                <mat-spinner *ngIf="isLoading" diameter="24" class="inline-block"></mat-spinner>
-              </button>
-            </mat-card-content>
-          </mat-card>
-        </div>
-      </div>
+              <div *ngIf="!isLoadingHistorial && historialCompras.length === 0" class="p-8 text-center text-gray-500">
+                No hay compras registradas en el sistema
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
     </div>
   `,
-  styles: [
-    `
-      table {
-        width: 100%;
-      }
-
-      th {
-        padding: 0.75rem;
-        text-align: left;
-        background-color: #f3f4f6;
-        font-weight: 600;
-      }
-
-      td {
-        padding: 0.75rem;
-        border-bottom: 1px solid #e5e7eb;
-      }
-    `
-  ]
+  styles: [``]
 })
 export class ComprasComponent implements OnInit {
-  detalleForm: FormGroup;
-  compraForm: FormGroup;
-  detalleCompras: DetalleListCompraDTO[] = [];
+  formularioProductoCompra: FormGroup;
+  formularioBusquedaCompra: FormGroup;
+
+  detallesCompra: DetalleCompraManual[] = [];
   proveedores: ProveedorDTO[] = [];
-  totalCompra = 0;
+  compraEncontrada: CompraDTO | null = null;
+  compraNoEncontrada = false;
+  historialCompras: CompraDTO[] = [];
+
+  totalCosto = 0;
+  totalVenta = 0;
   totalUnidades = 0;
   isLoading = false;
   isLoadingProveedores = false;
-  detalleColumns = ['idProducto', 'cantidad', 'costo', 'subtotal', 'acciones'];
+  isLoadingBusquedaCompra = false;
+  isLoadingHistorial = false;
+  expandedCompraId: number | null = null;
 
   constructor(
     private compraService: CompraService,
@@ -230,99 +412,304 @@ export class ComprasComponent implements OnInit {
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef
   ) {
-    this.detalleForm = this.fb.group({
-      idProducto: ['', [Validators.required]],
-      cantidad: ['', [Validators.required, Validators.min(1)]],
-      costoUnitario: ['', [Validators.required, Validators.min(0)]]
-    });
+    this.formularioProductoCompra = this.fb.group({
+      marcaVehiculo: ['', [Validators.required]],
+      modeloVehiculo: ['', [Validators.required]],
+      anioVehiculo: ['', [Validators.required, Validators.min(1900), Validators.max(2100)]],
+      tipoVidrio: ['', [Validators.required]],
+      calidadVidrio: ['', [Validators.required]],
+      idProveedor: ['', [Validators.required]],
+      cantidad: ['1', [Validators.required, Validators.min(1)]],
+      costoCompra: ['', [Validators.required, (control: AbstractControl) => {
+        const value = parseFloat(control.value);
+        return value >= 0.01 ? null : { minValue: true };
+      }]],
+      precioVenta: ['', [Validators.required, Validators.min(0)]]
+    }, { validators: this.validarPreciosCompraVenta });
 
-    this.compraForm = this.fb.group({
-      nombreProveedor: ['', [Validators.required]]
+    this.formularioBusquedaCompra = this.fb.group({
+      tipoRangoFechas: ['idCompra'],
+      idCompra: [''],
+      fechaInicio: [''],
+      fechaFin: ['']
     });
+  }
+
+  validarPreciosCompraVenta(formGroup: any): any {
+    const costoCompra = formGroup.get('costoCompra')?.value;
+    const precioVenta = formGroup.get('precioVenta')?.value;
+    
+    if (costoCompra && precioVenta) {
+      const costo = parseFloat(costoCompra);
+      const precio = parseFloat(precioVenta);
+      
+      if (costo > precio) {
+        return { precioInvalido: true };
+      }
+    }
+    return null;
   }
 
   ngOnInit(): void {
     this.cargarProveedores();
+    this.cargarHistorialCompras();
   }
 
   cargarProveedores(): void {
     this.isLoadingProveedores = true;
-    this.cdr.detectChanges();
     this.proveedorService.listarProveedores().subscribe({
       next: (data: ProveedorDTO[]) => {
         this.proveedores = data;
         this.isLoadingProveedores = false;
-        this.cdr.detectChanges();
       },
       error: (error: any) => {
         this.isLoadingProveedores = false;
-        this.cdr.detectChanges();
         console.error('Error cargando proveedores:', error);
+        this.snackBar.open('Error al cargar proveedores', 'Cerrar');
       }
     });
   }
 
-  agregarDetalle(): void {
-    if (this.detalleForm.invalid) return;
+  cargarHistorialCompras(): void {
+    this.isLoadingHistorial = true;
+    this.compraService.listarCompras().subscribe({
+      next: (data: CompraDTO[]) => {
+        this.historialCompras = data;
+        this.isLoadingHistorial = false;
+      },
+      error: (error: any) => {
+        this.isLoadingHistorial = false;
+        console.error('Error cargando historial de compras:', error);
+        this.snackBar.open('Error al cargar historial', 'Cerrar');
+      }
+    });
+  }
 
-    const detalle: DetalleListCompraDTO = {
-      idProducto: this.detalleForm.value.idProducto,
-      cantidad: this.detalleForm.value.cantidad,
-      costoCompra: this.detalleForm.value.costoUnitario
+  agregarDetalleALista(): void {
+    if (!this.formularioProductoCompra.valid) {
+      this.snackBar.open('Completa todos los campos requeridos', 'Cerrar');
+      return;
+    }
+
+    // Validar que costoCompra no sea mayor que precioVenta
+    const costoCompra = parseFloat(this.formularioProductoCompra.get('costoCompra')?.value || 0);
+    const precioVenta = parseFloat(this.formularioProductoCompra.get('precioVenta')?.value || 0);
+    
+    if (costoCompra > precioVenta) {
+      this.snackBar.open('Error: El precio de compra no puede ser mayor al precio de venta', 'Cerrar', {
+        duration: 4000
+      });
+      return;
+    }
+
+    const formValue = this.formularioProductoCompra.value;
+    const proveedorSeleccionado = this.proveedores.find(p => p.idProveedor === parseInt(formValue.idProveedor));
+
+    const detalle: DetalleCompraManual = {
+      marcaVehiculo: formValue.marcaVehiculo,
+      modeloVehiculo: formValue.modeloVehiculo,
+      anioVehiculo: formValue.anioVehiculo.toString(),
+      tipoVidrio: formValue.tipoVidrio,
+      calidadVidrio: formValue.calidadVidrio,
+      idProveedor: parseInt(formValue.idProveedor),
+      nombreProveedor: proveedorSeleccionado?.nombreProveedor || '',
+      cantidad: parseInt(formValue.cantidad),
+      costoCompra: costoCompra,
+      precioVenta: precioVenta,
+      subtotal: 0
     };
 
-    this.detalleCompras.push(detalle);
+    detalle.subtotal = detalle.costoCompra * detalle.cantidad;
+    this.detallesCompra.push(detalle);
     this.actualizarTotales();
-    this.detalleForm.reset();
+
+    this.snackBar.open('Producto agregado a la lista', 'Cerrar', { duration: 2000 });
+    this.limpiarFormularioProducto();
   }
 
   eliminarDetalle(index: number): void {
-    this.detalleCompras.splice(index, 1);
+    this.detallesCompra.splice(index, 1);
     this.actualizarTotales();
   }
 
+  limpiarFormularioProducto(): void {
+    this.formularioProductoCompra.reset({
+      cantidad: '1',
+      precioVenta: ''
+    });
+  }
+
   actualizarTotales(): void {
-    this.totalCompra = this.detalleCompras.reduce((total, item) => total + (item.costoCompra * item.cantidad), 0);
-    this.totalUnidades = this.detalleCompras.reduce((total, item) => total + item.cantidad, 0);
+    this.totalCosto = this.detallesCompra.reduce((total, item) => total + item.subtotal, 0);
+    this.totalVenta = this.detallesCompra.reduce((total, item) => total + (item.precioVenta * item.cantidad), 0);
+    this.totalUnidades = this.detallesCompra.reduce((total, item) => total + item.cantidad, 0);
   }
 
   confirmarCompra(): void {
-    if (this.detalleCompras.length === 0 || !this.compraForm.valid) return;
+    if (this.detallesCompra.length === 0) return;
 
     this.isLoading = true;
-    const usuario = this.authService.getCurrentUser();
-    
+    const idUsuario = this.authService.getCurrentUserId();
+
+    if (idUsuario === 0) {
+      this.snackBar.open('Error: No se pudo obtener el ID del usuario. Por favor vuelve a iniciar sesión.', 'Cerrar', {
+        duration: 6000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      this.isLoading = false;
+      return;
+    }
+
+    const detalle: DetalleListCompraDTO[] = this.detallesCompra.map(d => ({
+      idDetallaCompra: undefined,
+      idProveedor: d.idProveedor,
+      idProducto: 0,
+      marcaVehiculo: d.marcaVehiculo,
+      modeloVehiculo: d.modeloVehiculo,
+      anioVehiculo: d.anioVehiculo,
+      tipoVidrio: d.tipoVidrio,
+      calidadVidrio: d.calidadVidrio,
+      costoCompra: d.costoCompra,
+      precioVenta: d.precioVenta,
+      cantidad: d.cantidad
+    }));
+
+    // Obtener la fecha actual en formato YYYY-MM-DD
+    const hoy = new Date();
+    const fechaHoy = hoy.toISOString().split('T')[0];
+
     const compra: CompraDTO = {
-      nombreProveedor: this.compraForm.value.nombreProveedor,
-      idUsuario: usuario?.idUsuario || 0,
-      totalCompra: this.totalCompra,
-      detalle: this.detalleCompras
+      nombreProveedor: this.detallesCompra[0]?.nombreProveedor || '',
+      idUsuario: idUsuario,
+      fechaCompra: fechaHoy,
+      totalCompra: this.totalCosto,
+      detalle: detalle
     };
+
+    console.log('Enviando compra al backend:', JSON.stringify(compra, null, 2));
 
     this.compraService.crearCompra(compra).subscribe({
       next: (response) => {
-        this.isLoading = false;
-        this.snackBar.open('¡Compra registrada exitosamente!', 'Cerrar', {
-          duration: 5000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['success-snackbar']
+        Promise.resolve().then(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+          this.snackBar.open('Compra registrada correctamente', 'Cerrar', {
+            duration: 5000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+          this.detallesCompra = [];
+          this.totalCosto = 0;
+          this.totalVenta = 0;
+          this.totalUnidades = 0;
+          this.formularioProductoCompra.reset();
         });
-        this.detalleCompras = [];
-        this.totalCompra = 0;
-        this.totalUnidades = 0;
-        this.compraForm.reset();
       },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('Error creando compra:', error);
-        this.snackBar.open('Error al crear la compra. Por favor, intente de nuevo.', 'Cerrar', {
-          duration: 5000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['error-snackbar']
+      error: (error: any) => {
+        Promise.resolve().then(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+          const mensaje = error?.error?.message || error?.error?.detalle || 'Error desconocido al guardar compra';
+          console.error('Error completo:', error);
+          console.error('Respuesta:', error?.error);
+          this.snackBar.open('Error: ' + mensaje, 'Cerrar', {
+            duration: 6000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
         });
       }
     });
+  }
+
+  buscarCompra(): void {
+    const tipoRangoFechas = this.formularioBusquedaCompra.get('tipoRangoFechas')?.value;
+    
+    this.isLoadingBusquedaCompra = true;
+    this.compraEncontrada = null;
+    this.compraNoEncontrada = false;
+    this.cdr.detectChanges();
+
+    if (tipoRangoFechas === 'idCompra') {
+      const idCompra = this.formularioBusquedaCompra.get('idCompra')?.value;
+      if (!idCompra) {
+        this.snackBar.open('Por favor ingresa un ID de compra', 'Cerrar');
+        this.isLoadingBusquedaCompra = false;
+        this.cdr.detectChanges();
+        return;
+      }
+      
+      this.compraService.buscarPorId(idCompra).subscribe({
+        next: (data) => {
+          this.compraEncontrada = data;
+          this.isLoadingBusquedaCompra = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          this.isLoadingBusquedaCompra = false;
+          this.compraNoEncontrada = true;
+          this.cdr.detectChanges();
+        }
+      });
+    } else if (tipoRangoFechas === 'rango') {
+      const fechaInicio = this.formularioBusquedaCompra.get('fechaInicio')?.value;
+      const fechaFin = this.formularioBusquedaCompra.get('fechaFin')?.value;
+      
+      if (!fechaInicio || !fechaFin) {
+        this.snackBar.open('Por favor completa ambas fechas', 'Cerrar');
+        this.isLoadingBusquedaCompra = false;
+        this.cdr.detectChanges();
+        return;
+      }
+      
+      this.compraService.buscarPorRangoFechas(fechaInicio, fechaFin).subscribe({
+        next: (data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            this.compraEncontrada = data[0];
+          } else {
+            this.compraNoEncontrada = true;
+          }
+          this.isLoadingBusquedaCompra = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          this.isLoadingBusquedaCompra = false;
+          this.compraNoEncontrada = true;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  limpiarBusquedaCompra(): void {
+    this.formularioBusquedaCompra.reset();
+    this.compraEncontrada = null;
+    this.compraNoEncontrada = false;
+  }
+
+  // TrackBy functions para optimizar *ngFor
+  trackByProveedor(index: number, item: ProveedorDTO): number {
+    return item.idProveedor || index;
+  }
+
+  trackByDetalle(index: number, item: DetalleCompraManual): number {
+    return index;
+  }
+
+  trackByDetalleBusqueda(index: number, item: DetalleListCompraDTO): number {
+    return index;
+  }
+
+  trackByCompra(index: number, item: CompraDTO): number {
+    return item.idCompra || index;
+  }
+
+  toggleExpandCompra(compraId: number): void {
+    this.expandedCompraId = this.expandedCompraId === compraId ? null : compraId;
+  }
+
+  trackByDetalleCompra(index: number, item: any): number {
+    return item.idDetalleCompra || index;
   }
 }

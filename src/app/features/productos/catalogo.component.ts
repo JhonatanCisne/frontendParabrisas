@@ -201,6 +201,7 @@ import { ProductListDTO, FiltroVidrioDTO } from '../../shared/models';
 })
 export class CatalogoComponent implements OnInit {
   productos: ProductListDTO[] = [];
+  productosCompletos: ProductListDTO[] = [];
   isLoading = false;
   filterForm: FormGroup;
   displayedColumns: string[] = ['marca', 'modelo', 'anio', 'tipoVidrio', 'calidad', 'precio', 'stock', 'ubicacion'];
@@ -226,6 +227,7 @@ export class CatalogoComponent implements OnInit {
     this.productoService.getCatalogo().subscribe({
       next: (data) => {
         this.productos = data;
+        this.productosCompletos = data;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -238,21 +240,40 @@ export class CatalogoComponent implements OnInit {
   }
 
   onFilter(): void {
-    const filtro: FiltroVidrioDTO = this.filterForm.value;
-    this.isLoading = true;
-    this.cdr.detectChanges();
-    this.productoService.filtrarProductos(filtro).subscribe({
-      next: (data) => {
-        this.productos = data;
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-        console.error('Error filtrando productos:', error);
+    const filtroRaw: FiltroVidrioDTO = this.filterForm.value;
+    
+    // Filtrado en frontend - case-insensitive
+    this.productos = this.productosCompletos.filter((producto) => {
+      // Si el campo de filtro tiene valor y NO coincide con el producto, rechaza el producto
+      if (filtroRaw.marcaVehiculo && 
+          !producto.marcaVehiculo.toLowerCase().includes(filtroRaw.marcaVehiculo.toLowerCase())) {
+        return false;
       }
+      if (filtroRaw.modeloVehiculo && 
+          !producto.modeloVehiculo.toLowerCase().includes(filtroRaw.modeloVehiculo.toLowerCase())) {
+        return false;
+      }
+      if (filtroRaw.anioVehiculo && 
+          !producto.anioVehiculo.toLowerCase().includes(filtroRaw.anioVehiculo.toLowerCase())) {
+        return false;
+      }
+      if (filtroRaw.tipoVidrio && 
+          !producto.tipoVidrio.toLowerCase().includes(filtroRaw.tipoVidrio.toLowerCase())) {
+        return false;
+      }
+      if (filtroRaw.calidadVidrio && 
+          !producto.calidadVidrio.toLowerCase().includes(filtroRaw.calidadVidrio.toLowerCase())) {
+        return false;
+      }
+      if (filtroRaw.nombreProveedor && 
+          !producto.nombreProveedor.toLowerCase().includes(filtroRaw.nombreProveedor.toLowerCase())) {
+        return false;
+      }
+      // Si pasó todos los filtros, acepta el producto
+      return true;
     });
+    
+    this.cdr.detectChanges();
   }
 
   onReset(): void {
