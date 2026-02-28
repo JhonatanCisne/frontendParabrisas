@@ -30,7 +30,7 @@ import { ProveedorDTO } from '../../shared/models';
   ],
   template: `
     <div>
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <div class="flex items-center gap-3">
           <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <mat-icon style="color:white;font-size:22px;width:22px;height:22px">local_shipping</mat-icon>
@@ -40,7 +40,7 @@ import { ProveedorDTO } from '../../shared/models';
             <p class="text-sm text-slate-500 mt-0.5">Gestiona tus proveedores y créditos</p>
           </div>
         </div>
-        <button mat-raised-button color="primary" (click)="openDialog()">
+        <button mat-raised-button color="primary" (click)="openDialog()" class="w-full md:w-auto">
           <mat-icon class="mr-1">add</mat-icon>
           Nuevo Proveedor
         </button>
@@ -51,7 +51,8 @@ import { ProveedorDTO } from '../../shared/models';
           <mat-spinner diameter="40"></mat-spinner>
         </div>
 
-        <table mat-table [dataSource]="proveedores" *ngIf="!isLoading && proveedores.length > 0">
+        <div class="overflow-x-auto" *ngIf="!isLoading && proveedores.length > 0">
+        <table mat-table [dataSource]="proveedores" class="min-w-[640px]">
           <ng-container matColumnDef="nombre">
             <th mat-header-cell *matHeaderCellDef class="bg-slate-50">
               Nombre del Proveedor
@@ -128,6 +129,7 @@ import { ProveedorDTO } from '../../shared/models';
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
+        </div>
 
         <div *ngIf="!isLoading && proveedores.length === 0" class="py-12 text-center text-slate-400 text-sm">
           <mat-icon style="font-size:40px;width:40px;height:40px;opacity:0.4" class="mb-2">local_shipping</mat-icon>

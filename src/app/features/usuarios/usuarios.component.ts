@@ -30,7 +30,7 @@ import { UsuarioDTO } from '../../shared/models';
   ],
   template: `
     <div>
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <div class="flex items-center gap-3">
           <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <mat-icon style="color:white;font-size:22px;width:22px;height:22px">people</mat-icon>
@@ -40,7 +40,7 @@ import { UsuarioDTO } from '../../shared/models';
             <p class="text-sm text-slate-500 mt-0.5">Administra los usuarios del sistema</p>
           </div>
         </div>
-        <button mat-raised-button color="primary" (click)="openDialog()">
+        <button mat-raised-button color="primary" (click)="openDialog()" class="w-full md:w-auto">
           <mat-icon class="mr-1">add</mat-icon>
           Nuevo Usuario
         </button>

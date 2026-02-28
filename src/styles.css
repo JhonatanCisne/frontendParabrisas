@@ -525,6 +525,19 @@ app-root {
     min-width: 500px;
   }
 
+  /* Make cards and page sections stretch on phones */
+  mat-card,
+  .mat-mdc-card {
+    width: 100%;
+  }
+
+  .page-content,
+  .content-area {
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   /* Sticky first column on tables */
   table th:first-child,
   table td:first-child {

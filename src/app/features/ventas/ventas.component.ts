@@ -63,8 +63,8 @@ interface ProductoAgrupadoVenta {
     MatDialogModule
   ],
   template: `
-    <div class="p-6">
-      <div class="flex items-center gap-3 mb-6">
+    <div class="p-4 md:p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 md:mb-6">
         <div class="page-icon" style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <mat-icon style="color:white;font-size:22px;width:22px;height:22px">shopping_cart</mat-icon>
         </div>
@@ -77,26 +77,26 @@ interface ProductoAgrupadoVenta {
       <mat-tab-group>
         <!-- Pestaña Nueva Venta -->
         <mat-tab label="Nueva Venta">
-          <div class="mt-6 grid grid-cols-4 gap-6">
+          <div class="mt-4 lg:mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
             <!-- Panel catálogo + detalles -->
-            <div class="col-span-3">
+            <div class="col-span-1 lg:col-span-3">
 
               <!-- Placa del Vehículo -->
-              <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
-                <div class="flex items-center gap-4">
+              <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-5 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <mat-form-field appearance="outline" class="flex-1 mb-0">
                     <mat-label>Placa del Vehículo</mat-label>
                     <input matInput [formControl]="placaControl" placeholder="ABC-1234" class="uppercase" />
                     <mat-icon matSuffix class="text-slate-400">directions_car</mat-icon>
                   </mat-form-field>
-                  <p class="text-xs text-slate-400 -mt-4.5">Ingresa la placa antes de agregar productos</p>
+                  <p class="text-xs text-slate-400">Ingresa la placa antes de agregar productos</p>
                 </div>
               </div>
 
               <!-- Agregar por ID rápido -->
-              <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+              <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-5 mb-6">
                 <h2 class="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wider">Agregar por ID de Producto</h2>
-                <div class="flex items-start gap-3">
+                <div class="flex flex-col sm:flex-row gap-3">
                   <mat-form-field appearance="outline" class="w-40">
                     <mat-label>ID Producto</mat-label>
                     <input matInput type="number" [formControl]="idProductoControl" placeholder="Ej: 12" min="1" />
@@ -105,7 +105,7 @@ interface ProductoAgrupadoVenta {
                     <mat-label>Cantidad</mat-label>
                     <input matInput type="number" [formControl]="cantidadIdControl" min="1" placeholder="1" />
                   </mat-form-field>
-                  <button mat-raised-button color="primary" (click)="agregarPorId()" class="h-14 mt-1">
+                  <button mat-raised-button color="primary" (click)="agregarPorId()" class="w-full sm:w-auto h-12 sm:h-14 mt-1">
                     <mat-icon class="mr-1">add_shopping_cart</mat-icon> Agregar
                   </button>
                   <div *ngIf="productoBuscadoPorId" class="flex-1 bg-slate-50 rounded-lg px-4 py-3 text-sm">
@@ -121,9 +121,13 @@ interface ProductoAgrupadoVenta {
               </div>
 
               <!-- Filtros de búsqueda rápida -->
-              <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+              <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-5 mb-6">
                 <h2 class="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wider">Buscar Producto en Catálogo</h2>
-                <form [formGroup]="filtroForm" (ngSubmit)="filtrarProductos()" class="grid grid-cols-6 gap-3">
+                <form
+                  [formGroup]="filtroForm"
+                  (ngSubmit)="filtrarProductos()"
+                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3"
+                >
                   <mat-form-field appearance="outline" class="col-span-1">
                     <mat-label>Marca</mat-label>
                     <input matInput formControlName="marca" placeholder="Toyota" />
@@ -140,10 +144,10 @@ interface ProductoAgrupadoVenta {
                     <mat-label>Tipo</mat-label>
                     <input matInput formControlName="tipo" placeholder="Parabrisas" />
                   </mat-form-field>
-                  <button mat-raised-button color="primary" type="submit" class="h-14 self-start mt-1">
+                  <button mat-raised-button color="primary" type="submit" class="w-full sm:w-auto h-12 sm:h-14 self-start mt-1">
                     <mat-icon class="mr-1">search</mat-icon> Buscar
                   </button>
-                  <button mat-stroked-button type="button" (click)="limpiarFiltros()" class="h-14 self-start mt-1">
+                  <button mat-stroked-button type="button" (click)="limpiarFiltros()" class="w-full sm:w-auto h-12 sm:h-14 self-start mt-1">
                     Limpiar
                   </button>
                 </form>
@@ -151,7 +155,10 @@ interface ProductoAgrupadoVenta {
 
               <!-- Tabla catálogo de productos (desplegable) -->
               <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
-                <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center cursor-pointer select-none hover:bg-slate-50 transition-colors" (click)="catalogoExpandido = !catalogoExpandido">
+                <div
+                  class="px-4 md:px-5 py-4 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                  (click)="catalogoExpandido = !catalogoExpandido"
+                >
                   <div class="flex items-center gap-2">
                     <mat-icon class="text-slate-400 transition-transform" [style.transform]="catalogoExpandido ? 'rotate(0)' : 'rotate(-90deg)'">expand_more</mat-icon>
                     <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wider">Productos Disponibles</h2>
@@ -165,7 +172,7 @@ interface ProductoAgrupadoVenta {
                 </div>
 
                 <div *ngIf="!isLoadingProductos && productosFiltradosVenta.length > 0" class="overflow-x-auto" style="max-height: 420px; overflow-y: auto">
-                  <table class="w-full border-collapse">
+                  <table class="w-full min-w-[720px] border-collapse">
                     <thead class="sticky top-0 z-10">
                       <tr class="bg-slate-50">
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Marca</th>
@@ -218,14 +225,14 @@ interface ProductoAgrupadoVenta {
               </div>
 
               <!-- Lista de detalles de venta -->
-              <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+              <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-6 mb-6">
                 <h2 class="text-lg font-semibold text-slate-800 mb-4">
                   Detalles de Venta
                   <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">{{ detallesVenta.length }}</span>
                 </h2>
 
                 <div *ngIf="detallesVenta.length > 0" class="overflow-x-auto rounded-lg border border-slate-200">
-                  <table class="w-full border-collapse">
+                  <table class="w-full min-w-[680px] border-collapse">
                     <thead>
                       <tr class="bg-slate-50">
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Marca</th>
@@ -266,8 +273,8 @@ interface ProductoAgrupadoVenta {
 
             <!-- Panel resumen venta -->
             <div class="col-span-1">
-              <mat-card class="sticky top-6">
-                <mat-card-content class="p-5">
+              <mat-card class="lg:sticky lg:top-6">
+                <mat-card-content class="p-4 md:p-5">
                   <h3 class="text-base font-semibold text-slate-800 mb-4">Resumen de Venta</h3>
 
                   <div class="space-y-3 py-4 border-t border-b border-slate-100">
@@ -304,11 +311,15 @@ interface ProductoAgrupadoVenta {
 
         <!-- Pestaña Buscar Venta -->
         <mat-tab label="Buscar Venta">
-          <div class="mt-6">
-            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-5">
+          <div class="mt-4 md:mt-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-6 mb-5">
               <h2 class="text-lg font-semibold text-slate-800 mb-4">Buscar Venta</h2>
 
-              <form [formGroup]="formularioBusquedaVenta" (ngSubmit)="buscarVenta()" class="grid grid-cols-4 gap-4 mb-6">
+              <form
+                [formGroup]="formularioBusquedaVenta"
+                (ngSubmit)="buscarVenta()"
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+              >
                 <mat-form-field appearance="outline">
                   <mat-label>Tipo de Búsqueda</mat-label>
                   <mat-select formControlName="tipoBusqueda">
@@ -333,19 +344,19 @@ interface ProductoAgrupadoVenta {
                   </mat-form-field>
                 </ng-container>
 
-                <button mat-raised-button color="primary" type="submit" class="h-14 self-start mt-1">Buscar</button>
-                <button mat-stroked-button type="button" (click)="limpiarBusquedaVenta()" class="h-14 self-start mt-1">Limpiar</button>
+                <button mat-raised-button color="primary" type="submit" class="w-full sm:w-auto h-12 sm:h-14 self-start mt-1">Buscar</button>
+                <button mat-stroked-button type="button" (click)="limpiarBusquedaVenta()" class="w-full sm:w-auto h-12 sm:h-14 self-start mt-1">Limpiar</button>
               </form>
 
               <div *ngIf="isLoadingBusqueda" class="flex justify-center mb-6">
                 <mat-spinner diameter="40"></mat-spinner>
               </div>
 
-              <div *ngIf="detallesEncontrados.length > 0" class="rounded-xl border border-slate-200 p-5 bg-slate-50">
+              <div *ngIf="detallesEncontrados.length > 0" class="rounded-xl border border-slate-200 p-4 md:p-5 bg-slate-50">
                 <h3 class="font-semibold text-slate-800 text-base mb-4">Detalles Encontrados ({{ detallesEncontrados.length }})</h3>
 
                 <div class="overflow-x-auto rounded-lg border border-slate-200">
-                  <table class="w-full border-collapse">
+                  <table class="w-full min-w-[680px] border-collapse">
                     <thead>
                       <tr class="bg-slate-100">
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Placa</th>
@@ -381,8 +392,8 @@ interface ProductoAgrupadoVenta {
 
         <!-- Pestaña Historial de Ventas -->
         <mat-tab label="Historial de Ventas">
-          <div class="mt-6">
-            <div class="bg-white rounded-xl border border-slate-200 p-6">
+          <div class="mt-4 md:mt-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-6">
               <h2 class="text-lg font-semibold text-slate-800 mb-4">Historial de Ventas</h2>
 
               <div *ngIf="isLoadingHistorial" class="flex justify-center py-12">
@@ -390,7 +401,7 @@ interface ProductoAgrupadoVenta {
               </div>
 
               <div *ngIf="!isLoadingHistorial && historialsVentas.length > 0" class="overflow-x-auto rounded-lg border border-slate-200">
-                <table class="w-full border-collapse">
+                <table class="w-full min-w-[720px] border-collapse">
                   <thead>
                     <tr class="bg-slate-50">
                       <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">ID Venta</th>

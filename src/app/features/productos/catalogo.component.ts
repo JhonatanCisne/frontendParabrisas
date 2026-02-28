@@ -64,7 +64,11 @@ interface ProductoAgrupado {
 
         <!-- Filtros -->
         <div class="bg-white rounded-xl border border-slate-200 p-5 mb-5">
-          <form [formGroup]="filterForm" (ngSubmit)="onFilter()" class="grid grid-cols-5 gap-4">
+          <form
+            [formGroup]="filterForm"
+            (ngSubmit)="onFilter()"
+            class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4"
+          >
             <mat-form-field appearance="outline">
               <mat-label>Marca</mat-label>
               <input matInput formControlName="marcaVehiculo" placeholder="Ej: Toyota" />
@@ -100,11 +104,21 @@ interface ProductoAgrupado {
               <input matInput formControlName="nombreProveedor" placeholder="Proveedor" />
             </mat-form-field>
 
-            <button mat-raised-button color="primary" type="submit" class="col-span-1 h-14 self-start mt-1">
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              class="col-span-1 w-full sm:w-auto h-12 sm:h-14 self-start mt-1"
+            >
               <mat-icon class="mr-1">search</mat-icon>
               Filtrar
             </button>
-            <button mat-stroked-button type="button" (click)="onReset()" class="col-span-1 h-14 self-start mt-1">
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="onReset()"
+              class="col-span-1 w-full sm:w-auto h-12 sm:h-14 self-start mt-1"
+            >
               Limpiar
             </button>
           </form>
@@ -116,12 +130,12 @@ interface ProductoAgrupado {
             <mat-spinner diameter="40"></mat-spinner>
           </div>
 
-          <table
-            mat-table
-            [dataSource]="productosAgrupados"
-            *ngIf="!isLoading && productosAgrupados.length > 0"
-            class="w-full"
-          >
+          <div class="overflow-x-auto" *ngIf="!isLoading && productosAgrupados.length > 0">
+            <table
+              mat-table
+              [dataSource]="productosAgrupados"
+              class="w-full min-w-[720px]"
+            >
             <ng-container matColumnDef="marca">
               <th mat-header-cell *matHeaderCellDef>Marca</th>
               <td mat-cell *matCellDef="let element" class="font-medium">{{ element.marcaVehiculo }}</td>
@@ -195,9 +209,15 @@ interface ProductoAgrupado {
               </td>
             </ng-container>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="abrirDetalleGrupo(row)" class="cursor-pointer"></tr>
-          </table>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumns;"
+                (click)="abrirDetalleGrupo(row)"
+                class="cursor-pointer"
+              ></tr>
+            </table>
+          </div>
 
           <div *ngIf="!isLoading && productosAgrupados.length === 0" class="p-12 text-center text-slate-400">
             <mat-icon class="text-5xl mb-3" style="font-size: 48px; width: 48px; height: 48px; opacity: 0.4">inventory_2</mat-icon>
