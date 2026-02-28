@@ -260,11 +260,11 @@ export class ProveedoresComponent implements OnInit {
     const estadoUpper = estado.toUpperCase();
     switch (estadoUpper) {
       case 'ACTIVO':
-        return 'bg-green-100 text-green-800';
+        return 'bg-semerald-100 text-semerald-800';
       case 'INACTIVO':
-        return 'bg-red-100 text-red-800';
+        return 'bg-srose-100 text-srose-800';
       case 'SUSPENDIDO':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-sgold-100 text-sgold-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }

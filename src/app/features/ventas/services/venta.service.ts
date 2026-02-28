@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { VentaDTO } from '../../../shared/models';
+import { VentaDTO, EstadisticasDTO, VentasPorMesDTO, VentasPorProductoDTO } from '../../../shared/models';
 
 @Injectable({
   providedIn: 'root'
@@ -41,5 +41,31 @@ export class VentaService {
 
   obtenerNombreUsuario(idUsuario: number): Observable<string> {
     return this.http.get<string>(`${this.apiUrl}/usuario-nombre/${idUsuario}`);
+  }
+
+  obtenerEstadisticas(): Observable<EstadisticasDTO> {
+    return this.http.get<EstadisticasDTO>(`${this.apiUrl}/estadisticas`);
+  }
+
+  obtenerVentasPorMes(fechaInicio: string, fechaFin: string): Observable<VentasPorMesDTO[]> {
+    return this.http.get<VentasPorMesDTO[]>(`${this.apiUrl}/ventas-por-mes`, {
+      params: { fechaInicio, fechaFin }
+    });
+  }
+
+  obtenerVentasPorMesFiltrado(mes: string, ano: number): Observable<VentasPorMesDTO[]> {
+    return this.http.get<VentasPorMesDTO[]>(`${this.apiUrl}/ventas-por-mes-filtrado`, {
+      params: { mes, ano: ano.toString() }
+    });
+  }
+
+  obtenerVentasPorMesRango(mesInicio: string, mesFin: string, ano: number): Observable<VentasPorMesDTO[]> {
+    return this.http.get<VentasPorMesDTO[]>(`${this.apiUrl}/ventas-por-mes-rango`, {
+      params: { mesInicio, mesFin, ano: ano.toString() }
+    });
+  }
+
+  obtenerVentasPorProducto(): Observable<VentasPorProductoDTO[]> {
+    return this.http.get<VentasPorProductoDTO[]>(`${this.apiUrl}/ventas-por-producto`);
   }
 }

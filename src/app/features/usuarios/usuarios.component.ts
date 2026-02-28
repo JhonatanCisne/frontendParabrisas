@@ -227,11 +227,11 @@ export class UsuariosComponent implements OnInit {
   getRolClass(rol: string): string {
     switch (rol?.toUpperCase()) {
       case 'ADMIN':
-        return 'bg-red-100 text-red-800';
+        return 'bg-srose-100 text-srose-800';
       case 'VENDEDOR':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-sblue-100 text-sblue-700';
       case 'GERENTE':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-slavender-100 text-slavender-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }

@@ -9,13 +9,15 @@ export interface ProductListDTO {
   costoCompra: number;
   precioVenta: number;
   stockActual: number;
+  stockBajoAlerta: boolean;
   ubicacionAlmacen: string;
 }
 
 export interface FiltroVidrioDTO {
   marcaVehiculo?: string;
   modeloVehiculo?: string;
-  anioVehiculo?: string;
+  anioDesde?: string;
+  anioHasta?: string;
   tipoVidrio?: string;
   calidadVidrio?: string;
   nombreProveedor?: string;

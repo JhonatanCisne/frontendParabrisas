@@ -24,7 +24,7 @@ import { AuthService } from '../../core/services/auth.service';
     MatSnackBarModule
   ],
   template: `
-    <div class="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 to-gray-900">
+    <div class="flex items-center justify-center min-h-screen bg-gradient-to-br from-sblue-800 to-sblue-900">
       <mat-card class="w-full max-w-md shadow-2xl">
         <mat-card-content>
           <div class="text-center mb-8">

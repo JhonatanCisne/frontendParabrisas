@@ -28,6 +28,7 @@ interface DetalleCompraManual {
   costoCompra: number;
   precioVenta: number;
   subtotal: number;
+  ubicacionAlmacen: string;
 }
 
 @Component({
@@ -48,37 +49,37 @@ interface DetalleCompraManual {
     MatTabsModule
   ],
   template: `
-    <div class="p-6">
-      <h1 class="text-3xl font-bold text-gray-800 mb-6">Ingreso de Inventario (Compras)</h1>
+    <div class="p-4 md:p-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Ingreso de Inventario (Compras)</h1>
 
       <mat-tab-group>
         <!-- Pestaña Nueva Compra Manual -->
         <mat-tab label="Nueva Compra">
-          <div class="mt-6 grid grid-cols-4 gap-6">
+          <div class="mt-4 md:mt-6 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
             <!-- Panel de formulario de producto -->
-            <div class="col-span-3">
-              <div class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4">Registrar Producto y Compra Manual</h2>
+            <div class="md:col-span-3">
+              <div class="bg-white rounded-lg shadow p-4 md:p-6 mb-4 md:mb-6">
+                <h2 class="text-lg md:text-xl font-semibold mb-4">Registrar Producto y Compra Manual</h2>
 
-                <form [formGroup]="formularioProductoCompra" (ngSubmit)="agregarDetalleALista()" class="grid grid-cols-3 gap-4">
+                <form [formGroup]="formularioProductoCompra" (ngSubmit)="agregarDetalleALista()" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <!-- Fila 1: Marca y Modelo -->
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <mat-label>Marca Vehículo</mat-label>
                     <input matInput formControlName="marcaVehiculo" placeholder="Ej: Chevrolet" />
                   </mat-form-field>
 
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <mat-label>Modelo Vehículo</mat-label>
                     <input matInput formControlName="modeloVehiculo" placeholder="Ej: Aveo" />
                   </mat-form-field>
 
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <mat-label>Año</mat-label>
                     <input matInput type="number" formControlName="anioVehiculo" placeholder="2020" min="1990" max="2050" />
                   </mat-form-field>
 
                   <!-- Fila 2: Posición y Tipo de Vidrio -->
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <mat-label>Posición Vidrio</mat-label>
                     <mat-select formControlName="tipoVidrio">
                       <mat-option value="">Seleccionar</mat-option>
@@ -88,7 +89,7 @@ interface DetalleCompraManual {
                     </mat-select>
                   </mat-form-field>
 
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <mat-label>Tipo Vidrio</mat-label>
                     <mat-select formControlName="calidadVidrio">
                       <mat-option value="">Seleccionar</mat-option>
@@ -98,7 +99,7 @@ interface DetalleCompraManual {
                   </mat-form-field>
 
                   <!-- Fila 3: Proveedor -->
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <mat-label>Proveedor</mat-label>
                     <mat-select formControlName="idProveedor">
                       <mat-option value="">-- Seleccionar Proveedor --</mat-option>
@@ -109,27 +110,31 @@ interface DetalleCompraManual {
                   </mat-form-field>
 
                   <!-- Fila 4: Cantidad y Precios -->
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <mat-label>Cantidad</mat-label>
                     <input matInput type="number" formControlName="cantidad" placeholder="1" min="1" />
                   </mat-form-field>
 
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <mat-label>Costo Compra (S/)</mat-label>
                     <input matInput type="number" formControlName="costoCompra" placeholder="0.00" min="0.01" step="0.01" />
                   </mat-form-field>
 
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <mat-label>Precio Venta (S/)</mat-label>
                     <input matInput type="number" formControlName="precioVenta" placeholder="0.00" min="0" step="0.01" />
                   </mat-form-field>
 
-                  <!-- Botón agregar -->
-                  <div class="col-span-3 flex gap-2">
-                    <button mat-raised-button color="accent" type="submit" [disabled]="!formularioProductoCompra.valid">
+                  <mat-form-field class="w-full col-span-1 md:col-span-3">
+                    <mat-label>Ubicación Almacén *</mat-label>
+                    <input matInput formControlName="ubicacionAlmacen" placeholder="Ej: Almacén A, Estante 5" />
+                  </mat-form-field>
+
+                  <div class="col-span-1 md:col-span-3 flex flex-col md:flex-row gap-2">
+                    <button mat-raised-button color="accent" type="submit" [disabled]="!formularioProductoCompra.valid" class="flex-1">
                       Agregar a Lista
                     </button>
-                    <button mat-raised-button type="button" (click)="limpiarFormularioProducto()">
+                    <button mat-raised-button type="button" (click)="limpiarFormularioProducto()" class="flex-1">
                       Limpiar
                     </button>
                   </div>
@@ -137,41 +142,44 @@ interface DetalleCompraManual {
               </div>
 
               <!-- Lista de detalles de compra -->
-              <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4">
+              <div class="bg-white rounded-lg shadow p-4 md:p-6">
+                <h2 class="text-lg md:text-xl font-semibold mb-4">
                   Detalles de Compra ({{ detallesCompra.length }})
                 </h2>
 
                 <div *ngIf="detallesCompra.length > 0" class="overflow-x-auto">
-                  <table class="w-full border-collapse">
+                  <table class="w-full border-collapse text-xs md:text-sm">
                     <thead>
                       <tr class="bg-gray-100">
-                        <th class="border p-3 text-left">Marca</th>
-                        <th class="border p-3 text-left">Modelo</th>
-                        <th class="border p-3 text-left">Año</th>
-                        <th class="border p-3 text-left">Tipo</th>
-                        <th class="border p-3 text-left">Calidad</th>
-                        <th class="border p-3 text-center">Cant.</th>
-                        <th class="border p-3 text-right">Costo Unit.</th>
-                        <th class="border p-3 text-right">P. Venta</th>
-                        <th class="border p-3 text-right">Subtotal</th>
-                        <th class="border p-3 text-center">Acción</th>
+                        <th class="border p-2 md:p-3 text-left">Marca</th>
+                        <th class="border p-2 md:p-3 text-left">Modelo</th>
+                        <th class="border p-2 md:p-3 text-left">Año</th>
+                        <th class="border p-2 md:p-3 text-left">Tipo</th>
+                        <th class="border p-2 md:p-3 text-left">Calidad</th>
+                        <th class="border p-2 md:p-3 text-left">Ubicación</th>
+                        <th class="border p-2 md:p-3 text-center">Cant.</th>
+                        <th class="border p-2 md:p-3 text-right">Costo</th>
+                        <th class="border p-2 md:p-3 text-right">P. Vta</th>
+                        <th class="border p-2 md:p-3 text-right">Subtotal</th>
+                        <th class="border p-2 md:p-3 text-center">Acción</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr *ngFor="let detalle of detallesCompra; let i = index; trackBy: trackByDetalle" class="hover:bg-gray-50 border-b">
-                        <td class="border p-3">{{ detalle.marcaVehiculo }}</td>
-                        <td class="border p-3">{{ detalle.modeloVehiculo }}</td>
-                        <td class="border p-3">{{ detalle.anioVehiculo }}</td>
-                        <td class="border p-3">{{ detalle.tipoVidrio }}</td>
-                        <td class="border p-3">{{ detalle.calidadVidrio }}</td>
-                        <td class="border p-3 text-center font-semibold">{{ detalle.cantidad }}</td>
-                        <td class="border p-3 text-right">{{ detalle.costoCompra | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-3 text-right">{{ detalle.precioVenta | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-3 text-right font-bold text-blue-600">{{ detalle.subtotal | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-3 text-center">
+                        <td class="border p-2 md:p-3">{{ detalle.marcaVehiculo }}</td>
+                        <td class="border p-2 md:p-3">{{ detalle.modeloVehiculo }}</td>
+                        <td class="border p-2 md:p-3">{{ detalle.anioVehiculo }}</td>
+                        <td class="border p-2 md:p-3">{{ detalle.tipoVidrio }}</td>
+                        <td class="border p-2 md:p-3">{{ detalle.calidadVidrio }}</td>
+                        <td class="border p-2 md:p-3 text-xs font-semibold">{{ detalle.ubicacionAlmacen }}</td>
+                        <td class="border p-2 md:p-3 text-center font-semibold">{{ detalle.cantidad }}</td>
+                        <td class="border p-2 md:p-3 text-right">{{ detalle.costoCompra | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-2 md:p-3 text-right">{{ detalle.precioVenta | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-2 md:p-3 text-right font-bold text-sblue-500">{{ detalle.subtotal | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-2 md:p-3 text-center">
                           <button mat-raised-button color="warn" (click)="eliminarDetalle(i)" size="small">
-                            Eliminar
+                            <span class="hidden md:inline">Eliminar</span>
+                            <mat-icon class="md:hidden">delete</mat-icon>
                           </button>
                         </td>
                       </tr>
@@ -179,20 +187,20 @@ interface DetalleCompraManual {
                   </table>
                 </div>
 
-                <div *ngIf="detallesCompra.length === 0" class="p-8 text-center text-gray-500">
+                <div *ngIf="detallesCompra.length === 0" class="p-8 text-center text-gray-500 text-sm md:text-base">
                   No hay productos agregados. Completa el formulario y presiona "Agregar a Lista"
                 </div>
               </div>
             </div>
 
             <!-- Panel resumen compra -->
-            <div class="col-span-1">
-              <mat-card class="sticky top-6">
+            <div class="md:col-span-1">
+              <mat-card class="md:sticky md:top-6">
                 <mat-card-header>
-                  <mat-card-title>Resumen de Compra</mat-card-title>
+                  <mat-card-title class="text-lg md:text-xl">Resumen de Compra</mat-card-title>
                 </mat-card-header>
 
-                <mat-card-content>
+                <mat-card-content class="text-sm md:text-base">
                   <div class="border-t border-b py-4 my-4 space-y-2">
                     <div class="flex justify-between">
                       <span>Productos:</span>
@@ -202,11 +210,11 @@ interface DetalleCompraManual {
                       <span>Total Unidades:</span>
                       <strong>{{ totalUnidades }}</strong>
                     </div>
-                    <div class="text-xl font-bold text-blue-600 flex justify-between py-2">
+                    <div class="text-lg md:text-xl font-bold text-sblue-500 flex justify-between py-2">
                       <span>Total Costo:</span>
                       <span>{{ totalCosto | currency : 'PEN' : 'S/' }}</span>
                     </div>
-                    <div class="text-lg font-semibold text-green-600 flex justify-between">
+                    <div class="text-base md:text-lg font-semibold text-semerald-500 flex justify-between">
                       <span>Total Venta:</span>
                       <span>{{ totalVenta | currency : 'PEN' : 'S/' }}</span>
                     </div>
@@ -217,7 +225,7 @@ interface DetalleCompraManual {
                     color="primary"
                     (click)="confirmarCompra()"
                     [disabled]="detallesCompra.length === 0 || isLoading"
-                    class="w-full py-3 text-lg font-semibold"
+                    class="w-full py-2 md:py-3 text-base md:text-lg font-semibold mt-4"
                   >
                     <span *ngIf="!isLoading">Confirmar Compra</span>
                     <mat-spinner *ngIf="isLoading" diameter="20" class="inline-block"></mat-spinner>
@@ -230,12 +238,12 @@ interface DetalleCompraManual {
 
         <!-- Pestaña Buscar Compra -->
         <mat-tab label="Buscar Compra">
-          <div class="mt-6">
-            <div class="bg-white rounded-lg shadow p-6 mb-6">
-              <h2 class="text-xl font-semibold mb-4">Buscar Compra</h2>
+          <div class="mt-4 md:mt-6">
+            <div class="bg-white rounded-lg shadow p-4 md:p-6 mb-4 md:mb-6">
+              <h2 class="text-lg md:text-xl font-semibold mb-4">Buscar Compra</h2>
 
-              <form [formGroup]="formularioBusquedaCompra" (ngSubmit)="buscarCompra()" class="grid grid-cols-4 gap-4 mb-6">
-                <mat-form-field>
+              <form [formGroup]="formularioBusquedaCompra" (ngSubmit)="buscarCompra()" class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6">
+                <mat-form-field class="col-span-2 md:col-span-1 w-full">
                   <mat-label>Tipo de Búsqueda</mat-label>
                   <mat-select formControlName="tipoRangoFechas">
                     <mat-option value="idCompra">Por ID</mat-option>
@@ -244,25 +252,25 @@ interface DetalleCompraManual {
                 </mat-form-field>
 
                 <!-- Búsqueda por ID -->
-                <mat-form-field *ngIf="formularioBusquedaCompra.get('tipoRangoFechas')?.value === 'idCompra'">
+                <mat-form-field *ngIf="formularioBusquedaCompra.get('tipoRangoFechas')?.value === 'idCompra'" class="col-span-2 md:col-span-1 w-full">
                   <mat-label>ID Compra</mat-label>
                   <input matInput type="number" formControlName="idCompra" placeholder="1" />
                 </mat-form-field>
 
                 <!-- Búsqueda por Rango de Fechas -->
                 <ng-container *ngIf="formularioBusquedaCompra.get('tipoRangoFechas')?.value === 'rango'">
-                  <mat-form-field>
+                  <mat-form-field class="col-span-1 md:col-span-1 w-full">
                     <mat-label>Fecha Inicio</mat-label>
                     <input matInput type="date" formControlName="fechaInicio" />
                   </mat-form-field>
-                  <mat-form-field>
+                  <mat-form-field class="col-span-1 md:col-span-1 w-full">
                     <mat-label>Fecha Fin</mat-label>
                     <input matInput type="date" formControlName="fechaFin" />
                   </mat-form-field>
                 </ng-container>
 
-                <button mat-raised-button color="primary" type="submit">Buscar</button>
-                <button mat-raised-button type="button" (click)="limpiarBusquedaCompra()">Limpiar</button>
+                <button mat-raised-button color="primary" type="submit" class="col-span-1">Buscar</button>
+                <button mat-raised-button type="button" (click)="limpiarBusquedaCompra()" class="col-span-1">Limpiar</button>
               </form>
 
               <div *ngIf="isLoadingBusquedaCompra" class="flex justify-center mb-6">
@@ -270,32 +278,33 @@ interface DetalleCompraManual {
               </div>
 
               <!-- Resultado búsqueda -->
-              <div *ngIf="compraEncontrada" class="bg-gray-50 rounded-lg p-6">
+              <div *ngIf="compraEncontrada" class="bg-gray-50 rounded-lg p-4 md:p-6">
                 <h3 class="font-bold text-lg mb-4">Compra #{{ compraEncontrada.idCompra }}</h3>
 
-                <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div>
-                    <p class="text-gray-600">Proveedor:</p>
+                    <p class="text-gray-600 text-sm">Proveedor:</p>
                     <p class="font-semibold">{{ compraEncontrada.nombreProveedor }}</p>
                   </div>
                   <div>
-                    <p class="text-gray-600">Fecha:</p>
+                    <p class="text-gray-600 text-sm">Fecha:</p>
                     <p class="font-semibold">{{ compraEncontrada.fechaCompra | date : 'short' }}</p>
                   </div>
-                  <div class="col-span-2">
-                    <p class="text-gray-600">Total:</p>
-                    <p class="font-bold text-blue-600 text-lg">{{ compraEncontrada.totalCompra | currency : 'PEN' : 'S/' }}</p>
+                  <div class="col-span-1 md:col-span-2">
+                    <p class="text-gray-600 text-sm">Total:</p>
+                    <p class="font-bold text-sblue-500 text-lg">{{ compraEncontrada.totalCompra | currency : 'PEN' : 'S/' }}</p>
                   </div>
                 </div>
 
-                <h4 class="font-semibold mb-3">Productos:</h4>
+                <h4 class="font-semibold mb-3 text-sm md:text-base">Productos:</h4>
                 <div class="overflow-x-auto">
-                  <table class="w-full border-collapse">
+                  <table class="w-full border-collapse text-xs md:text-sm">
                     <thead>
                       <tr class="bg-gray-200">
                         <th class="border p-2 text-left">Marca</th>
                         <th class="border p-2 text-left">Modelo</th>
                         <th class="border p-2 text-left">Año</th>
+                        <th class="border p-2 text-left">Ubicación</th>
                         <th class="border p-2 text-center">Cantidad</th>
                         <th class="border p-2 text-right">Costo</th>
                         <th class="border p-2 text-right">Subtotal</th>
@@ -306,6 +315,7 @@ interface DetalleCompraManual {
                         <td class="border p-2">{{ item.marcaVehiculo || 'N/A' }}</td>
                         <td class="border p-2">{{ item.modeloVehiculo || 'N/A' }}</td>
                         <td class="border p-2">{{ item.anioVehiculo || 'N/A' }}</td>
+                        <td class="border p-2 text-xs font-semibold">{{ item.ubicacionAlmacen || 'N/A' }}</td>
                         <td class="border p-2 text-center">{{ item.cantidad }}</td>
                         <td class="border p-2 text-right">{{ item.costoCompra | currency : 'PEN' : 'S/' }}</td>
                         <td class="border p-2 text-right font-semibold">{{ (item.costoCompra * item.cantidad) | currency : 'PEN' : 'S/' }}</td>
@@ -315,7 +325,7 @@ interface DetalleCompraManual {
                 </div>
               </div>
 
-              <div *ngIf="compraNoEncontrada" class="p-6 text-center text-red-600 bg-red-50 rounded-lg">
+              <div *ngIf="compraNoEncontrada" class="p-4 md:p-6 text-center text-srose-500 bg-srose-50 rounded-lg text-sm md:text-base">
                 No se encontró compra con ese ID
               </div>
             </div>
@@ -324,47 +334,47 @@ interface DetalleCompraManual {
 
         <!-- Pestaña Historial de Compras -->
         <mat-tab label="Historial de Compras">
-          <div class="mt-6">
-            <div class="bg-white rounded-lg shadow p-6">
-              <h2 class="text-xl font-semibold mb-4">Historial de Compras</h2>
+          <div class="mt-4 md:mt-6">
+            <div class="bg-white rounded-lg shadow p-4 md:p-6">
+              <h2 class="text-lg md:text-xl font-semibold mb-4">Historial de Compras</h2>
 
               <div *ngIf="isLoadingHistorial" class="flex justify-center py-12">
                 <mat-spinner diameter="40"></mat-spinner>
               </div>
 
               <div *ngIf="!isLoadingHistorial && historialCompras.length > 0" class="overflow-x-auto">
-                <table class="w-full border-collapse">
+                <table class="w-full border-collapse text-xs md:text-sm">
                   <thead>
                     <tr class="bg-gray-100">
-                      <th class="border p-3 text-center" style="width: 50px;"></th>
-                      <th class="border p-3 text-left">Importadora / Proveedor</th>
-                      <th class="border p-3 text-right">Monto Total (S/)</th>
-                      <th class="border p-3 text-left">Fecha</th>
+                      <th class="border p-2 md:p-3 text-center" style="width: 40px;"></th>
+                      <th class="border p-2 md:p-3 text-left">Proveedor</th>
+                      <th class="border p-2 md:p-3 text-right">Total (S/)</th>
+                      <th class="border p-2 md:p-3 text-left">Fecha</th>
                     </tr>
                   </thead>
                   <tbody>
                     <ng-container *ngFor="let compra of historialCompras; trackBy: trackByCompra">
                       <!-- Fila Resumen -->
                       <tr class="hover:bg-gray-50 border-b cursor-pointer" (click)="toggleExpandCompra(compra.idCompra || 0)">
-                        <td class="border p-3 text-center">
-                          <mat-icon class="text-gray-600" [ngClass]="{'rotate-90': expandedCompraId === compra.idCompra}">arrow_right</mat-icon>
+                        <td class="border p-2 md:p-3 text-center">
+                          <mat-icon class="text-gray-600 text-sm md:text-base" [ngClass]="{'rotate-90': expandedCompraId === compra.idCompra}">arrow_right</mat-icon>
                         </td>
-                        <td class="border p-3 font-semibold">{{ compra.nombreProveedor }}</td>
-                        <td class="border p-3 text-right font-bold text-blue-600">{{ compra.totalCompra | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-3">{{ compra.fechaCompra | date : 'short' }}</td>
+                        <td class="border p-2 md:p-3 font-semibold text-sm md:text-base">{{ compra.nombreProveedor }}</td>
+                        <td class="border p-2 md:p-3 text-right font-bold text-sblue-500 text-sm md:text-base">{{ compra.totalCompra | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-2 md:p-3 text-sm md:text-base">{{ compra.fechaCompra | date : 'short' }}</td>
                       </tr>
                       <!-- Filas Detalles (Expandidas) -->
                       <ng-container *ngIf="expandedCompraId === compra.idCompra && compra.detalle && compra.detalle.length > 0">
-                        <tr *ngFor="let detalle of compra.detalle; trackBy: trackByDetalleCompra" class="bg-blue-50 border-b">
+                        <tr *ngFor="let detalle of compra.detalle; trackBy: trackByDetalleCompra" class="bg-sblue-50 border-b">
                           <td class="border p-2"></td>
-                          <td class="border p-2 text-sm">
+                          <td class="border p-2 text-xs md:text-sm">
                             <span class="font-semibold">{{ detalle.marcaVehiculo }} {{ detalle.modeloVehiculo }}</span>
                             <br/>
-                            <span class="text-gray-600 text-xs">{{ detalle.tipoVidrio }} • {{ detalle.calidadVidrio }}</span>
+                            <span class="text-gray-600 text-xs">{{ detalle.tipoVidrio }} • {{ detalle.calidadVidrio }} • {{ detalle.ubicacionAlmacen }}</span>
                           </td>
                           <td class="border p-2 text-right">
-                            <div class="text-sm">Cant: {{ detalle.cantidad }}</div>
-                            <div class="font-semibold text-blue-600">{{ (detalle.costoCompra * detalle.cantidad) | currency : 'PEN' : 'S/' }}</div>
+                            <div class="text-xs md:text-sm">Cant: {{ detalle.cantidad }}</div>
+                            <div class="font-semibold text-sblue-500 text-xs md:text-sm">{{ (detalle.costoCompra * detalle.cantidad) | currency : 'PEN' : 'S/' }}</div>
                           </td>
                           <td class="border p-2"></td>
                         </tr>
@@ -374,7 +384,7 @@ interface DetalleCompraManual {
                 </table>
               </div>
 
-              <div *ngIf="!isLoadingHistorial && historialCompras.length === 0" class="p-8 text-center text-gray-500">
+              <div *ngIf="!isLoadingHistorial && historialCompras.length === 0" class="p-8 text-center text-gray-500 text-sm md:text-base">
                 No hay compras registradas en el sistema
               </div>
             </div>
@@ -383,7 +393,24 @@ interface DetalleCompraManual {
       </mat-tab-group>
     </div>
   `,
-  styles: [``]
+  styles: [`
+    :host ::ng-deep {
+      .mat-mdc-form-field {
+        width: 100%;
+      }
+      
+      @media (max-width: 768px) {
+        .mat-mdc-tab-labels {
+          min-width: auto !important;
+        }
+        
+        .mat-mdc-tab-label {
+          min-width: auto !important;
+          padding: 0 12px !important;
+        }
+      }
+    }
+  `]
 })
 export class ComprasComponent implements OnInit {
   formularioProductoCompra: FormGroup;
@@ -424,8 +451,20 @@ export class ComprasComponent implements OnInit {
         const value = parseFloat(control.value);
         return value >= 0.01 ? null : { minValue: true };
       }]],
-      precioVenta: ['', [Validators.required, Validators.min(0)]]
-    }, { validators: this.validarPreciosCompraVenta });
+      precioVenta: ['', [Validators.required, Validators.min(0)]],
+      ubicacionAlmacen: ['', [Validators.required]]
+    }, { validators: (formGroup: AbstractControl) => {
+      const costoCompra = formGroup.get('costoCompra')?.value;
+      const precioVenta = formGroup.get('precioVenta')?.value;
+      if (costoCompra && precioVenta) {
+        const costo = parseFloat(costoCompra);
+        const precio = parseFloat(precioVenta);
+        if (!isNaN(costo) && !isNaN(precio) && costo > precio) {
+          return { precioInvalido: true };
+        }
+      }
+      return null;
+    }});
 
     this.formularioBusquedaCompra = this.fb.group({
       tipoRangoFechas: ['idCompra'],
@@ -516,7 +555,8 @@ export class ComprasComponent implements OnInit {
       cantidad: parseInt(formValue.cantidad),
       costoCompra: costoCompra,
       precioVenta: precioVenta,
-      subtotal: 0
+      subtotal: 0,
+      ubicacionAlmacen: formValue.ubicacionAlmacen
     };
 
     detalle.subtotal = detalle.costoCompra * detalle.cantidad;
@@ -572,7 +612,8 @@ export class ComprasComponent implements OnInit {
       calidadVidrio: d.calidadVidrio,
       costoCompra: d.costoCompra,
       precioVenta: d.precioVenta,
-      cantidad: d.cantidad
+      cantidad: d.cantidad,
+      ubicacionAlmacen: d.ubicacionAlmacen
     }));
 
     // Obtener la fecha actual en formato YYYY-MM-DD
