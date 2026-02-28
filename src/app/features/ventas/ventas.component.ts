@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,8 +8,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Inject } from '@angular/core';
 import { ProductoService } from '../productos/services/producto.service';
 import { VentaService } from './services/venta.service';
 import { ProductListDTO, VentaDTO, DetalleVentaListDTO } from '../../shared/models';
@@ -28,6 +31,19 @@ interface DetalleVentaManual {
   subtotal: number;
 }
 
+interface ProductoAgrupadoVenta {
+  key: string;
+  marcaVehiculo: string;
+  modeloVehiculo: string;
+  anioVehiculo: string;
+  tipoVidrio: string;
+  calidadVidrio: string;
+  nombreProveedor: string;
+  precioVenta: number;
+  stockTotal: number;
+  productos: ProductListDTO[];
+}
+
 @Component({
   selector: 'app-ventas',
   standalone: true,
@@ -41,94 +57,152 @@ interface DetalleVentaManual {
     MatTableModule,
     MatProgressSpinnerModule,
     MatCardModule,
+    MatIconModule,
     MatSnackBarModule,
-    MatTabsModule
+    MatTabsModule,
+    MatDialogModule
   ],
   template: `
     <div class="p-6">
-      <h1 class="text-3xl font-bold text-gray-800 mb-6">Punto de Venta</h1>
+      <div class="flex items-center gap-3 mb-6">
+        <div class="page-icon" style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <mat-icon style="color:white;font-size:22px;width:22px;height:22px">shopping_cart</mat-icon>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900" style="letter-spacing:-0.02em">Punto de Venta</h1>
+          <p class="text-sm text-slate-500 mt-0.5">Registra y gestiona las ventas</p>
+        </div>
+      </div>
 
       <mat-tab-group>
         <!-- Pestaña Nueva Venta -->
         <mat-tab label="Nueva Venta">
           <div class="mt-6 grid grid-cols-4 gap-6">
-            <!-- Panel de formulario -->
+            <!-- Panel catálogo + detalles -->
             <div class="col-span-3">
-              <div class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4">Registrar Venta</h2>
 
-                <form [formGroup]="formularioVenta" (ngSubmit)="agregarDetalleALista()" class="grid grid-cols-4 gap-4">
-                  <!-- Fila 1: ID Producto y Seleccionar de lista -->
-                  <mat-form-field>
+              <!-- Placa del Vehículo -->
+              <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+                <div class="flex items-center gap-4">
+                  <mat-form-field appearance="outline" class="flex-1 mb-0">
+                    <mat-label>Placa del Vehículo</mat-label>
+                    <input matInput [formControl]="placaControl" placeholder="ABC-1234" class="uppercase" />
+                    <mat-icon matSuffix class="text-slate-400">directions_car</mat-icon>
+                  </mat-form-field>
+                  <p class="text-xs text-slate-400 -mt-4.5">Ingresa la placa antes de agregar productos</p>
+                </div>
+              </div>
+
+              <!-- Agregar por ID rápido -->
+              <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+                <h2 class="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wider">Agregar por ID de Producto</h2>
+                <div class="flex items-start gap-3">
+                  <mat-form-field appearance="outline" class="w-40">
                     <mat-label>ID Producto</mat-label>
-                    <input matInput type="number" formControlName="idProducto" placeholder="ej: 1" />
+                    <input matInput type="number" [formControl]="idProductoControl" placeholder="Ej: 12" min="1" />
                   </mat-form-field>
-
-                  <mat-form-field>
-                    <mat-label>Producto disponible</mat-label>
-                    <mat-select formControlName="productoSeleccionado" (selectionChange)="onProductoSeleccionado($event)">
-                      <mat-option value="">Seleccionar...</mat-option>
-                      <mat-option *ngFor="let prod of productosDisponibles; trackBy: trackByProducto" [value]="prod.idProducto">
-                        {{ prod.marcaVehiculo }} {{ prod.modeloVehiculo }} (S/ {{ prod.precioVenta | currency }})
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <!-- Fila 2: Cantidad y Placa -->
-                  <mat-form-field>
+                  <mat-form-field appearance="outline" class="w-32">
                     <mat-label>Cantidad</mat-label>
-                    <input matInput type="number" formControlName="cantidad" placeholder="1" min="1" />
+                    <input matInput type="number" [formControl]="cantidadIdControl" min="1" placeholder="1" />
                   </mat-form-field>
-
-                  <mat-form-field>
-                    <mat-label>Placa Vehículo</mat-label>
-                    <input matInput formControlName="placaVehiculo" placeholder="ABC-1234" />
-                  </mat-form-field>
-
-                  <!-- Botón agregar -->
-                  <div class="col-span-4 flex gap-2">
-                    <button mat-raised-button color="accent" type="submit" [disabled]="!formularioVenta.valid">
-                      Agregar a Lista
-                    </button>
-                    <button mat-raised-button type="button" (click)="limpiarFormularioVenta()">
-                      Limpiar
-                    </button>
+                  <button mat-raised-button color="primary" (click)="agregarPorId()" class="h-14 mt-1">
+                    <mat-icon class="mr-1">add_shopping_cart</mat-icon> Agregar
+                  </button>
+                  <div *ngIf="productoBuscadoPorId" class="flex-1 bg-slate-50 rounded-lg px-4 py-3 text-sm">
+                    <span class="font-semibold text-slate-800">{{ productoBuscadoPorId.marcaVehiculo }} {{ productoBuscadoPorId.modeloVehiculo }} {{ productoBuscadoPorId.anioVehiculo }}</span>
+                    <span class="text-slate-400 mx-1">·</span>
+                    <span class="text-slate-600">{{ productoBuscadoPorId.tipoVidrio }} · {{ productoBuscadoPorId.calidadVidrio }}</span>
+                    <span class="text-slate-400 mx-1">·</span>
+                    <span class="font-semibold text-emerald-600">{{ productoBuscadoPorId.precioVenta | currency : 'PEN' : 'S/' }}</span>
+                    <span class="text-slate-400 mx-1">·</span>
+                    <span class="text-slate-500">Stock: {{ productoBuscadoPorId.stockActual }}</span>
                   </div>
+                </div>
+              </div>
+
+              <!-- Filtros de búsqueda rápida -->
+              <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+                <h2 class="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wider">Buscar Producto en Catálogo</h2>
+                <form [formGroup]="filtroForm" (ngSubmit)="filtrarProductos()" class="grid grid-cols-6 gap-3">
+                  <mat-form-field appearance="outline" class="col-span-1">
+                    <mat-label>Marca</mat-label>
+                    <input matInput formControlName="marca" placeholder="Toyota" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="col-span-1">
+                    <mat-label>Modelo</mat-label>
+                    <input matInput formControlName="modelo" placeholder="Corolla" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="col-span-1">
+                    <mat-label>Año</mat-label>
+                    <input matInput formControlName="anio" placeholder="2023" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="col-span-1">
+                    <mat-label>Tipo</mat-label>
+                    <input matInput formControlName="tipo" placeholder="Parabrisas" />
+                  </mat-form-field>
+                  <button mat-raised-button color="primary" type="submit" class="h-14 self-start mt-1">
+                    <mat-icon class="mr-1">search</mat-icon> Buscar
+                  </button>
+                  <button mat-stroked-button type="button" (click)="limpiarFiltros()" class="h-14 self-start mt-1">
+                    Limpiar
+                  </button>
                 </form>
               </div>
 
-              <!-- Lista de detalles de venta -->
-              <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4">
-                  Detalles de Venta ({{ detallesVenta.length }})
-                </h2>
+              <!-- Tabla catálogo de productos (desplegable) -->
+              <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+                <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center cursor-pointer select-none hover:bg-slate-50 transition-colors" (click)="catalogoExpandido = !catalogoExpandido">
+                  <div class="flex items-center gap-2">
+                    <mat-icon class="text-slate-400 transition-transform" [style.transform]="catalogoExpandido ? 'rotate(0)' : 'rotate(-90deg)'">expand_more</mat-icon>
+                    <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wider">Productos Disponibles</h2>
+                  </div>
+                  <span class="text-xs text-slate-400">{{ productosFiltradosVenta.length }} resultado(s)</span>
+                </div>
 
-                <div *ngIf="detallesVenta.length > 0" class="overflow-x-auto">
+                <ng-container *ngIf="catalogoExpandido">
+                <div *ngIf="isLoadingProductos" class="flex justify-center py-10">
+                  <mat-spinner diameter="36"></mat-spinner>
+                </div>
+
+                <div *ngIf="!isLoadingProductos && productosFiltradosVenta.length > 0" class="overflow-x-auto" style="max-height: 420px; overflow-y: auto">
                   <table class="w-full border-collapse">
-                    <thead>
-                      <tr class="bg-gray-100">
-                        <th class="border p-3 text-left">Marca</th>
-                        <th class="border p-3 text-left">Modelo</th>
-                        <th class="border p-3 text-center">ID Prod</th>
-                        <th class="border p-3 text-left">Placa</th>
-                        <th class="border p-3 text-center">Cant.</th>
-                        <th class="border p-3 text-right">Precio Unit.</th>
-                        <th class="border p-3 text-right">Subtotal</th>
-                        <th class="border p-3 text-center">Acción</th>
+                    <thead class="sticky top-0 z-10">
+                      <tr class="bg-slate-50">
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Marca</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Modelo</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Año</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Calidad</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Precio</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Acción</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let detalle of detallesVenta; let i = index; trackBy: trackByDetalle" class="hover:bg-gray-50 border-b">
-                        <td class="border p-3">{{ detalle.marcaVehiculo }}</td>
-                        <td class="border p-3">{{ detalle.modeloVehiculo }}</td>
-                        <td class="border p-3 text-center font-semibold">{{ detalle.idProducto }}</td>
-                        <td class="border p-3">{{ detalle.placaVehiculo }}</td>
-                        <td class="border p-3 text-center font-semibold">{{ detalle.cantidad }}</td>
-                        <td class="border p-3 text-right">{{ detalle.precioVenta | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-3 text-right font-bold text-semerald-500">{{ detalle.subtotal | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-3 text-center">
-                          <button mat-raised-button color="warn" (click)="eliminarDetalle(i)" size="small">
-                            Eliminar
+                      <tr *ngFor="let grupo of productosFiltradosVenta; trackBy: trackByGrupo" class="border-b border-slate-100 hover:bg-emerald-50/40 transition-colors">
+                        <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ grupo.marcaVehiculo }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ grupo.modeloVehiculo }}</td>
+                        <td class="px-4 py-3 text-center text-sm text-slate-600">{{ grupo.anioVehiculo }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ grupo.tipoVidrio }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ grupo.calidadVidrio }}</td>
+                        <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800">{{ grupo.precioVenta | currency : 'PEN' : 'S/' }}</td>
+                        <td class="px-4 py-3 text-center">
+                          <span
+                            [class]="grupo.stockTotal <= 1
+                              ? 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200'
+                              : 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700'"
+                          >{{ grupo.stockTotal }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                          <button
+                            mat-mini-fab
+                            color="primary"
+                            (click)="abrirDialogoAgregar(grupo)"
+                            [disabled]="grupo.stockTotal <= 0"
+                            class="w-9! h-9!"
+                            matTooltip="Agregar a venta"
+                          >
+                            <mat-icon class="text-lg!">add_shopping_cart</mat-icon>
                           </button>
                         </td>
                       </tr>
@@ -136,8 +210,56 @@ interface DetalleVentaManual {
                   </table>
                 </div>
 
-                <div *ngIf="detallesVenta.length === 0" class="p-8 text-center text-gray-500">
-                  No hay ventas agregadas. Completa el formulario y presiona "Agregar a Lista"
+                <div *ngIf="!isLoadingProductos && productosFiltradosVenta.length === 0" class="py-10 text-center text-slate-400">
+                  <mat-icon style="font-size:40px;width:40px;height:40px;opacity:0.4" class="mb-2">inventory_2</mat-icon>
+                  <p class="text-sm">No se encontraron productos</p>
+                </div>
+                </ng-container>
+              </div>
+
+              <!-- Lista de detalles de venta -->
+              <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4">
+                  Detalles de Venta
+                  <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">{{ detallesVenta.length }}</span>
+                </h2>
+
+                <div *ngIf="detallesVenta.length > 0" class="overflow-x-auto rounded-lg border border-slate-200">
+                  <table class="w-full border-collapse">
+                    <thead>
+                      <tr class="bg-slate-50">
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Marca</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Modelo</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Placa</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Cant.</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Precio Unit.</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Subtotal</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let detalle of detallesVenta; let i = index; trackBy: trackByDetalle" class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ detalle.marcaVehiculo }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ detalle.modeloVehiculo }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-500">{{ detalle.tipoVidrio }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ detalle.placaVehiculo }}</td>
+                        <td class="px-4 py-3 text-center text-sm font-semibold text-slate-700">{{ detalle.cantidad }}</td>
+                        <td class="px-4 py-3 text-right text-sm text-slate-600">{{ detalle.precioVenta | currency : 'PEN' : 'S/' }}</td>
+                        <td class="px-4 py-3 text-right text-sm font-bold text-emerald-600">{{ detalle.subtotal | currency : 'PEN' : 'S/' }}</td>
+                        <td class="px-4 py-3 text-center">
+                          <button mat-icon-button color="warn" (click)="eliminarDetalle(i)">
+                            <mat-icon class="text-lg">delete_outline</mat-icon>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div *ngIf="detallesVenta.length === 0" class="py-12 text-center text-slate-400">
+                  <mat-icon style="font-size:40px;width:40px;height:40px;opacity:0.4" class="mb-2">receipt_long</mat-icon>
+                  <p class="text-sm">Selecciona productos del catálogo y presiona el botón <strong>+</strong> para agregarlos</p>
                 </div>
               </div>
             </div>
@@ -145,24 +267,23 @@ interface DetalleVentaManual {
             <!-- Panel resumen venta -->
             <div class="col-span-1">
               <mat-card class="sticky top-6">
-                <mat-card-header>
-                  <mat-card-title>Resumen de Venta</mat-card-title>
-                </mat-card-header>
+                <mat-card-content class="p-5">
+                  <h3 class="text-base font-semibold text-slate-800 mb-4">Resumen de Venta</h3>
 
-                <mat-card-content>
-                  <div class="border-t border-b py-4 my-4 space-y-2">
-                    <div class="flex justify-between">
-                      <span>Productos:</span>
-                      <strong>{{ detallesVenta.length }}</strong>
+                  <div class="space-y-3 py-4 border-t border-b border-slate-100">
+                    <div class="flex justify-between text-sm">
+                      <span class="text-slate-500">Productos:</span>
+                      <strong class="text-slate-800">{{ detallesVenta.length }}</strong>
                     </div>
-                    <div class="flex justify-between">
-                      <span>Total Unidades:</span>
-                      <strong>{{ totalUnidades }}</strong>
+                    <div class="flex justify-between text-sm">
+                      <span class="text-slate-500">Total Unidades:</span>
+                      <strong class="text-slate-800">{{ totalUnidades }}</strong>
                     </div>
-                    <div class="text-xl font-bold text-semerald-500 flex justify-between py-2">
-                      <span>Total Venta:</span>
-                      <span>{{ totalVenta | currency : 'PEN' : 'S/' }}</span>
-                    </div>
+                  </div>
+
+                  <div class="flex justify-between py-4 text-lg">
+                    <span class="font-semibold text-slate-700">Total:</span>
+                    <span class="font-bold text-emerald-600">{{ totalVenta | currency : 'PEN' : 'S/' }}</span>
                   </div>
 
                   <button
@@ -170,7 +291,7 @@ interface DetalleVentaManual {
                     color="primary"
                     (click)="confirmarVenta()"
                     [disabled]="detallesVenta.length === 0 || isLoading"
-                    class="w-full py-3 text-lg font-semibold"
+                    class="w-full py-3 text-base font-semibold mt-2"
                   >
                     <span *ngIf="!isLoading">Confirmar Venta</span>
                     <span *ngIf="isLoading">Procesando...</span>
@@ -184,11 +305,11 @@ interface DetalleVentaManual {
         <!-- Pestaña Buscar Venta -->
         <mat-tab label="Buscar Venta">
           <div class="mt-6">
-            <div class="bg-white rounded-lg shadow p-6 mb-6">
-              <h2 class="text-xl font-semibold mb-4">Buscar Venta</h2>
+            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-5">
+              <h2 class="text-lg font-semibold text-slate-800 mb-4">Buscar Venta</h2>
 
               <form [formGroup]="formularioBusquedaVenta" (ngSubmit)="buscarVenta()" class="grid grid-cols-4 gap-4 mb-6">
-                <mat-form-field>
+                <mat-form-field appearance="outline">
                   <mat-label>Tipo de Búsqueda</mat-label>
                   <mat-select formControlName="tipoBusqueda">
                     <mat-option value="placa">Por Placa</mat-option>
@@ -196,65 +317,62 @@ interface DetalleVentaManual {
                   </mat-select>
                 </mat-form-field>
 
-                <!-- Búsqueda por Placa -->
-                <mat-form-field *ngIf="formularioBusquedaVenta.get('tipoBusqueda')?.value === 'placa'">
+                <mat-form-field appearance="outline" *ngIf="formularioBusquedaVenta.get('tipoBusqueda')?.value === 'placa'">
                   <mat-label>Placa del Vehículo</mat-label>
                   <input matInput formControlName="placa" placeholder="ABC-1234" />
                 </mat-form-field>
 
-                <!-- Búsqueda por Rango de Fechas -->
                 <ng-container *ngIf="formularioBusquedaVenta.get('tipoBusqueda')?.value === 'rango'">
-                  <mat-form-field>
+                  <mat-form-field appearance="outline">
                     <mat-label>Fecha Inicio</mat-label>
                     <input matInput type="date" formControlName="fechaInicio" />
                   </mat-form-field>
-                  <mat-form-field>
+                  <mat-form-field appearance="outline">
                     <mat-label>Fecha Fin</mat-label>
                     <input matInput type="date" formControlName="fechaFin" />
                   </mat-form-field>
                 </ng-container>
 
-                <button mat-raised-button color="primary" type="submit">Buscar</button>
-                <button mat-raised-button type="button" (click)="limpiarBusquedaVenta()">Limpiar</button>
+                <button mat-raised-button color="primary" type="submit" class="h-14 self-start mt-1">Buscar</button>
+                <button mat-stroked-button type="button" (click)="limpiarBusquedaVenta()" class="h-14 self-start mt-1">Limpiar</button>
               </form>
 
               <div *ngIf="isLoadingBusqueda" class="flex justify-center mb-6">
                 <mat-spinner diameter="40"></mat-spinner>
               </div>
 
-              <!-- Resultado búsqueda -->
-              <div *ngIf="detallesEncontrados.length > 0" class="bg-gray-50 rounded-lg p-6">
-                <h3 class="font-bold text-lg mb-4">Detalles Encontrados ({{ detallesEncontrados.length }})</h3>
+              <div *ngIf="detallesEncontrados.length > 0" class="rounded-xl border border-slate-200 p-5 bg-slate-50">
+                <h3 class="font-semibold text-slate-800 text-base mb-4">Detalles Encontrados ({{ detallesEncontrados.length }})</h3>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
                   <table class="w-full border-collapse">
                     <thead>
-                      <tr class="bg-gray-200">
-                        <th class="border p-2 text-left">Placa</th>
-                        <th class="border p-2 text-left">Marca</th>
-                        <th class="border p-2 text-left">Modelo</th>
-                        <th class="border p-2 text-center">Cantidad</th>
-                        <th class="border p-2 text-right">Precio</th>
-                        <th class="border p-2 text-right">Subtotal</th>
-                        <th class="border p-2 text-left">Fecha</th>
+                      <tr class="bg-slate-100">
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Placa</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Marca</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Modelo</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Cantidad</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Precio</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Subtotal</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let detalle of detallesEncontrados; trackBy: trackByDetalleEncontrado" class="border-b">
-                        <td class="border p-2 font-semibold">{{ detalle.placaVehiculo || 'N/A' }}</td>
-                        <td class="border p-2">{{ detalle.marcaVehiculo || 'N/A' }}</td>
-                        <td class="border p-2">{{ detalle.modeloVehiculo || 'N/A' }}</td>
-                        <td class="border p-2 text-center">{{ detalle.cantidad }}</td>
-                        <td class="border p-2 text-right">{{ detalle.precioVenta | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-2 text-right font-semibold">{{ detalle.subtotal | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-2 text-left">{{ detalle.fecha | date : 'short' }}</td>
+                      <tr *ngFor="let detalle of detallesEncontrados; trackBy: trackByDetalleEncontrado" class="border-b border-slate-100 hover:bg-white transition-colors">
+                        <td class="px-4 py-3 text-sm font-semibold text-slate-800">{{ detalle.placaVehiculo || 'N/A' }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ detalle.marcaVehiculo || 'N/A' }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ detalle.modeloVehiculo || 'N/A' }}</td>
+                        <td class="px-4 py-3 text-center text-sm font-semibold">{{ detalle.cantidad }}</td>
+                        <td class="px-4 py-3 text-right text-sm">{{ detalle.precioVenta | currency : 'PEN' : 'S/' }}</td>
+                        <td class="px-4 py-3 text-right text-sm font-semibold text-emerald-600">{{ detalle.subtotal | currency : 'PEN' : 'S/' }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-500">{{ detalle.fecha | date : 'short' }}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              <div *ngIf="ventaNoEncontrada && !isLoadingBusqueda" class="p-6 text-center text-srose-500 bg-srose-50 rounded-lg">
+              <div *ngIf="ventaNoEncontrada && !isLoadingBusqueda" class="py-8 text-center text-red-500 bg-red-50 rounded-xl border border-red-200">
                 No se encontraron ventas con los criterios especificados
               </div>
             </div>
@@ -264,46 +382,44 @@ interface DetalleVentaManual {
         <!-- Pestaña Historial de Ventas -->
         <mat-tab label="Historial de Ventas">
           <div class="mt-6">
-            <div class="bg-white rounded-lg shadow p-6">
-              <h2 class="text-xl font-semibold mb-4">Historial de Ventas</h2>
+            <div class="bg-white rounded-xl border border-slate-200 p-6">
+              <h2 class="text-lg font-semibold text-slate-800 mb-4">Historial de Ventas</h2>
 
               <div *ngIf="isLoadingHistorial" class="flex justify-center py-12">
                 <mat-spinner diameter="40"></mat-spinner>
               </div>
 
-              <div *ngIf="!isLoadingHistorial && historialsVentas.length > 0" class="overflow-x-auto">
+              <div *ngIf="!isLoadingHistorial && historialsVentas.length > 0" class="overflow-x-auto rounded-lg border border-slate-200">
                 <table class="w-full border-collapse">
                   <thead>
-                    <tr class="bg-gray-100">
-                      <th class="border p-3 text-center">ID Venta</th>
-                      <th class="border p-3 text-left">Placa</th>
-                      <th class="border p-3 text-right">Monto Total (S/)</th>
-                      <th class="border p-3 text-left">Fecha</th>
+                    <tr class="bg-slate-50">
+                      <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">ID Venta</th>
+                      <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Placa</th>
+                      <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Monto Total (S/)</th>
+                      <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha</th>
                     </tr>
                   </thead>
                   <tbody>
                     <ng-container *ngFor="let venta of historialsVentas; trackBy: trackByVentaHistorial">
-                      <!-- Fila Resumen -->
-                      <tr class="hover:bg-gray-50 border-b cursor-pointer" (click)="toggleExpandVenta(venta.idVenta || 0)">
-                        <td class="border p-3 text-center font-semibold">{{ venta.idVenta }}</td>
-                        <td class="border p-3 font-semibold">{{ venta.placaVehiculo || venta.detalles?.[0]?.placaVehiculo || 'N/A' }}</td>
-                        <td class="border p-3 text-right font-bold text-semerald-500">{{ venta.totalVenta | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-3">{{ venta.fecha | date : 'short' }}</td>
+                      <tr class="border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors" (click)="toggleExpandVenta(venta.idVenta || 0)">
+                        <td class="px-4 py-3 text-center text-sm font-mono font-semibold text-slate-700">{{ venta.idVenta }}</td>
+                        <td class="px-4 py-3 text-sm font-semibold text-slate-800">{{ venta.placaVehiculo || (venta.detalles && venta.detalles[0] ? venta.detalles[0]['placaVehiculo'] : 'N/A') }}</td>
+                        <td class="px-4 py-3 text-right text-sm font-bold text-emerald-600">{{ venta.totalVenta | currency : 'PEN' : 'S/' }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-500">{{ venta.fecha | date : 'short' }}</td>
                       </tr>
-                      <!-- Filas Detalles (Expandidas) -->
                       <ng-container *ngIf="expandedVentaId === venta.idVenta && venta.detalles && venta.detalles.length > 0">
-                        <tr *ngFor="let detalle of venta.detalles; trackBy: trackByDetalleVenta" class="bg-semerald-50 border-b">
-                          <td class="border p-2 text-sm">
-                            <span class="font-semibold">{{ detalle.marcaVehiculo }} {{ detalle.modeloVehiculo }}</span>
+                        <tr *ngFor="let detalle of venta.detalles; trackBy: trackByDetalleVenta" class="bg-blue-50/50 border-b border-blue-100/50">
+                          <td class="px-4 py-2.5 text-xs">
+                            <span class="font-semibold text-slate-700">{{ detalle.marcaVehiculo }} {{ detalle.modeloVehiculo }}</span>
                             <br/>
-                            <span class="text-gray-600 text-xs">{{ detalle.tipoVidrio }} • {{ detalle.calidadVidrio }}</span>
+                            <span class="text-slate-400">{{ detalle.tipoVidrio }} • {{ detalle.calidadVidrio }}</span>
                           </td>
-                          <td class="border p-2 text-sm">{{ detalle.placaVehiculo }}</td>
-                          <td class="border p-2 text-right">
-                            <div class="text-sm">Cant: {{ detalle.cantidad }}</div>
-                            <div class="font-semibold text-semerald-500">{{ (detalle.precioVenta * detalle.cantidad) | currency : 'PEN' : 'S/' }}</div>
+                          <td class="px-4 py-2.5 text-xs text-slate-600">{{ detalle.placaVehiculo }}</td>
+                          <td class="px-4 py-2.5 text-right">
+                            <div class="text-xs text-slate-500">Cant: {{ detalle.cantidad }}</div>
+                            <div class="text-xs font-semibold text-emerald-600">{{ (detalle.precioVenta * detalle.cantidad) | currency : 'PEN' : 'S/' }}</div>
                           </td>
-                          <td class="border p-2"></td>
+                          <td class="px-4 py-2.5"></td>
                         </tr>
                       </ng-container>
                     </ng-container>
@@ -311,8 +427,9 @@ interface DetalleVentaManual {
                 </table>
               </div>
 
-              <div *ngIf="!isLoadingHistorial && historialsVentas.length === 0" class="p-8 text-center text-gray-500">
-                No hay ventas registradas en el sistema
+              <div *ngIf="!isLoadingHistorial && historialsVentas.length === 0" class="py-12 text-center text-slate-400">
+                <mat-icon style="font-size:40px;width:40px;height:40px;opacity:0.4" class="mb-2">receipt</mat-icon>
+                <p class="text-sm">No hay ventas registradas en el sistema</p>
               </div>
             </div>
           </div>
@@ -320,14 +437,24 @@ interface DetalleVentaManual {
       </mat-tab-group>
     </div>
   `,
-  styles: []
+  styles: [`
+    :host ::ng-deep .mat-mdc-tab-labels {
+      border-bottom: 1px solid #e2e8f0;
+    }
+  `]
 })
 export class VentasComponent implements OnInit {
-  formularioVenta: FormGroup;
+  filtroForm: FormGroup;
+  placaControl = new FormControl('', Validators.required);
+  idProductoControl = new FormControl<number | null>(null);
+  cantidadIdControl = new FormControl(1, [Validators.required, Validators.min(1)]);
+  productoBuscadoPorId: ProductListDTO | null = null;
   formularioBusquedaVenta: FormGroup;
 
   detallesVenta: DetalleVentaManual[] = [];
   productosDisponibles: ProductListDTO[] = [];
+  productosFiltradosVenta: ProductoAgrupadoVenta[] = [];
+  productosAgrupadosVenta: ProductoAgrupadoVenta[] = [];
   ventasEncontradas: any[] = [];
   detallesEncontrados: any[] = [];
   ventaNoEncontrada = false;
@@ -337,9 +464,11 @@ export class VentasComponent implements OnInit {
   totalVenta = 0;
   totalUnidades = 0;
   isLoading = false;
+  isLoadingProductos = false;
   isLoadingBusqueda = false;
   isLoadingHistorial = false;
   expandedVentaId: number | null = null;
+  catalogoExpandido = true;
 
   constructor(
     private ventaService: VentaService,
@@ -347,13 +476,14 @@ export class VentasComponent implements OnInit {
     private authService: AuthService,
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog
   ) {
-    this.formularioVenta = this.fb.group({
-      idProducto: ['', [Validators.required, Validators.min(1)]],
-      productoSeleccionado: [''],
-      cantidad: ['1', [Validators.required, Validators.min(1)]],
-      placaVehiculo: ['', [Validators.required]]
+    this.filtroForm = this.fb.group({
+      marca: [''],
+      modelo: [''],
+      anio: [''],
+      tipo: ['']
     });
 
     this.formularioBusquedaVenta = this.fb.group({
@@ -370,13 +500,157 @@ export class VentasComponent implements OnInit {
   }
 
   cargarProductos(): void {
+    this.isLoadingProductos = true;
+    this.cdr.detectChanges();
     this.productoService.getCatalogo().subscribe({
       next: (data: ProductListDTO[]) => {
         this.productosDisponibles = data;
+        this.productosAgrupadosVenta = this.agruparProductosVenta(data);
+        this.productosFiltradosVenta = [...this.productosAgrupadosVenta];
+        this.isLoadingProductos = false;
+        this.cdr.detectChanges();
       },
       error: (error: any) => {
         console.error('Error cargando productos:', error);
         this.snackBar.open('Error al cargar productos', 'Cerrar');
+        this.isLoadingProductos = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private agruparProductosVenta(productos: ProductListDTO[]): ProductoAgrupadoVenta[] {
+    const map = new Map<string, ProductoAgrupadoVenta>();
+
+    for (const p of productos) {
+      const key = [p.marcaVehiculo, p.modeloVehiculo, p.anioVehiculo, p.tipoVidrio, p.calidadVidrio, p.nombreProveedor].join('|');
+      const existente = map.get(key);
+
+      if (!existente) {
+        map.set(key, {
+          key,
+          marcaVehiculo: p.marcaVehiculo,
+          modeloVehiculo: p.modeloVehiculo,
+          anioVehiculo: p.anioVehiculo,
+          tipoVidrio: p.tipoVidrio,
+          calidadVidrio: p.calidadVidrio,
+          nombreProveedor: p.nombreProveedor,
+          precioVenta: p.precioVenta,
+          stockTotal: p.stockActual,
+          productos: [p]
+        });
+      } else {
+        existente.productos.push(p);
+        existente.stockTotal += p.stockActual;
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) =>
+      a.marcaVehiculo.localeCompare(b.marcaVehiculo) ||
+      a.modeloVehiculo.localeCompare(b.modeloVehiculo)
+    );
+  }
+
+  filtrarProductos(): void {
+    const f = this.filtroForm.value;
+    this.productosFiltradosVenta = this.productosAgrupadosVenta.filter(g => {
+      if (f.marca && !g.marcaVehiculo.toLowerCase().includes(f.marca.toLowerCase())) return false;
+      if (f.modelo && !g.modeloVehiculo.toLowerCase().includes(f.modelo.toLowerCase())) return false;
+      if (f.anio && !g.anioVehiculo.includes(f.anio)) return false;
+      if (f.tipo && !g.tipoVidrio.toLowerCase().includes(f.tipo.toLowerCase())) return false;
+      return true;
+    });
+    this.cdr.detectChanges();
+  }
+
+  limpiarFiltros(): void {
+    this.filtroForm.reset();
+    this.productosFiltradosVenta = [...this.productosAgrupadosVenta];
+    this.cdr.detectChanges();
+  }
+
+  agregarPorId(): void {
+    const id = this.idProductoControl.value;
+    const cantidad = this.cantidadIdControl.value || 1;
+    const placa = this.placaControl.value?.trim();
+
+    if (!placa) {
+      this.snackBar.open('Ingresa la placa del vehículo primero', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    if (!id || id <= 0) {
+      this.snackBar.open('Ingresa un ID de producto válido', 'Cerrar', { duration: 3000 });
+      return;
+    }
+
+    // Buscar el producto en la lista ya cargada
+    const producto = this.productosDisponibles.find(p => p.idProducto === id);
+    if (!producto) {
+      this.snackBar.open('Producto con ese ID no encontrado', 'Cerrar', { duration: 3000 });
+      this.productoBuscadoPorId = null;
+      return;
+    }
+    if (producto.stockActual <= 0) {
+      this.snackBar.open('El producto no tiene stock disponible', 'Cerrar', { duration: 3000 });
+      this.productoBuscadoPorId = producto;
+      return;
+    }
+    if (cantidad > producto.stockActual) {
+      this.snackBar.open(`Stock insuficiente. Disponible: ${producto.stockActual}`, 'Cerrar', { duration: 3000 });
+      this.productoBuscadoPorId = producto;
+      return;
+    }
+
+    this.productoBuscadoPorId = producto;
+
+    const detalle: DetalleVentaManual = {
+      idProducto: producto.idProducto,
+      marcaVehiculo: producto.marcaVehiculo,
+      modeloVehiculo: producto.modeloVehiculo,
+      anioVehiculo: producto.anioVehiculo,
+      tipoVidrio: producto.tipoVidrio,
+      calidadVidrio: producto.calidadVidrio,
+      placaVehiculo: placa,
+      cantidad: cantidad,
+      precioVenta: producto.precioVenta,
+      subtotal: producto.precioVenta * cantidad
+    };
+    this.detallesVenta.push(detalle);
+    this.actualizarTotales();
+    this.snackBar.open('Producto agregado a la venta', 'Cerrar', { duration: 2000 });
+    this.idProductoControl.reset();
+    this.cantidadIdControl.setValue(1);
+  }
+
+  abrirDialogoAgregar(grupo: ProductoAgrupadoVenta): void {
+    const placa = this.placaControl.value?.trim();
+    if (!placa) {
+      this.snackBar.open('Ingresa la placa del vehículo primero', 'Cerrar', { duration: 3000 });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(AgregarVentaDialogComponent, {
+      width: '480px',
+      data: { grupo, placa }
+    });
+
+    dialogRef.afterClosed().subscribe((result: { producto: ProductListDTO; cantidad: number; placa: string } | undefined) => {
+      if (result) {
+        const detalle: DetalleVentaManual = {
+          idProducto: result.producto.idProducto,
+          marcaVehiculo: result.producto.marcaVehiculo,
+          modeloVehiculo: result.producto.modeloVehiculo,
+          anioVehiculo: result.producto.anioVehiculo,
+          tipoVidrio: result.producto.tipoVidrio,
+          calidadVidrio: result.producto.calidadVidrio,
+          placaVehiculo: result.placa,
+          cantidad: result.cantidad,
+          precioVenta: result.producto.precioVenta,
+          subtotal: result.producto.precioVenta * result.cantidad
+        };
+        this.detallesVenta.push(detalle);
+        this.actualizarTotales();
+        this.snackBar.open('Producto agregado a la venta', 'Cerrar', { duration: 2000 });
       }
     });
   }
@@ -401,63 +675,9 @@ export class VentasComponent implements OnInit {
     });
   }
 
-  onProductoSeleccionado(event: any): void {
-    const idProducto = event.value;
-    if (idProducto) {
-      this.formularioVenta.patchValue({
-        idProducto: idProducto
-      });
-    }
-  }
-
-  agregarDetalleALista(): void {
-    if (!this.formularioVenta.valid) {
-      this.snackBar.open('Completa todos los campos requeridos', 'Cerrar');
-      return;
-    }
-
-    const idProducto = parseInt(this.formularioVenta.get('idProducto')?.value || 0);
-    const producto = this.productosDisponibles.find(p => p.idProducto === idProducto);
-
-    if (!producto) {
-      this.snackBar.open('Producto no encontrado', 'Cerrar');
-      return;
-    }
-
-    const formValue = this.formularioVenta.value;
-    const detalle: DetalleVentaManual = {
-      idProducto: idProducto,
-      marcaVehiculo: producto.marcaVehiculo,
-      modeloVehiculo: producto.modeloVehiculo,
-      anioVehiculo: producto.anioVehiculo,
-      tipoVidrio: producto.tipoVidrio,
-      calidadVidrio: producto.calidadVidrio,
-      placaVehiculo: formValue.placaVehiculo,
-      cantidad: parseInt(formValue.cantidad),
-      precioVenta: producto.precioVenta,
-      subtotal: 0
-    };
-
-    detalle.subtotal = detalle.precioVenta * detalle.cantidad;
-    this.detallesVenta.push(detalle);
-    this.actualizarTotales();
-
-    this.snackBar.open('Producto agregado a la lista', 'Cerrar', { duration: 2000 });
-    this.limpiarFormularioVenta();
-  }
-
   eliminarDetalle(index: number): void {
     this.detallesVenta.splice(index, 1);
     this.actualizarTotales();
-  }
-
-  limpiarFormularioVenta(): void {
-    this.formularioVenta.reset({
-      cantidad: '1',
-      idProducto: '',
-      productoSeleccionado: '',
-      placaVehiculo: ''
-    });
   }
 
   actualizarTotales(): void {
@@ -480,9 +700,6 @@ export class VentasComponent implements OnInit {
     // Establecer isLoading antes del subscribe para evitar ExpressionChangedAfterItHasBeenCheckedError
     this.isLoading = true;
 
-    const hoy = new Date();
-    const fechaHoy = hoy.toISOString().split('T')[0];
-
     // Obtener la placa del primer detalle
     const placaPrincipal = this.detallesVenta[0]?.placaVehiculo || '';
 
@@ -500,7 +717,6 @@ export class VentasComponent implements OnInit {
 
     const venta: VentaDTO = {
       idUsuario: idUsuario,
-      fecha: fechaHoy,
       totalVenta: this.totalVenta,
       detalles: detalles,
       placaVehiculo: placaPrincipal
@@ -510,31 +726,34 @@ export class VentasComponent implements OnInit {
 
     this.ventaService.crearVenta(venta).subscribe({
       next: (response) => {
-        this.snackBar.open('Venta registrada correctamente', 'Cerrar', {
-          duration: 5000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top'
-        });
-        this.detallesVenta = [];
-        this.totalVenta = 0;
-        this.totalUnidades = 0;
-        this.formularioVenta.reset({ cantidad: '1' });
-        setTimeout(() => {
+        Promise.resolve().then(() => {
           this.isLoading = false;
-        }, 0);
+          this.cdr.markForCheck();
+          this.snackBar.open('Venta registrada correctamente', 'Cerrar', {
+            duration: 5000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+          this.detallesVenta = [];
+          this.totalVenta = 0;
+          this.totalUnidades = 0;
+          this.placaControl.reset();
+          this.cargarProductos();
+        });
       },
       error: (error: any) => {
-        const mensaje = error?.error?.message || error?.error?.detalle || 'Error desconocido al guardar venta';
+        const mensaje = error?.error?.mensaje || error?.error?.message || error?.error?.detalle || 'Error desconocido al guardar venta';
         console.error('Error completo:', error);
         console.error('Respuesta:', error?.error);
-        this.snackBar.open('Error: ' + mensaje, 'Cerrar', {
-          duration: 6000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top'
-        });
-        setTimeout(() => {
+        Promise.resolve().then(() => {
           this.isLoading = false;
-        }, 0);
+          this.cdr.markForCheck();
+          this.snackBar.open('Error: ' + mensaje, 'Cerrar', {
+            duration: 6000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        });
       }
     });
   }
@@ -633,6 +852,10 @@ export class VentasComponent implements OnInit {
     return item.idProducto || index;
   }
 
+  trackByGrupo(index: number, item: ProductoAgrupadoVenta): string {
+    return item.key;
+  }
+
   trackByDetalle(index: number, item: any): number {
     return index;
   }
@@ -659,5 +882,107 @@ export class VentasComponent implements OnInit {
 
   trackByDetalleVenta(index: number, item: any): number {
     return item.idDetalleVenta || index;
+  }
+}
+
+// ====== Dialog para agregar producto a la venta ======
+@Component({
+  selector: 'app-agregar-venta-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSelectModule,
+    MatIconModule
+  ],
+  template: `
+    <div class="p-6">
+      <h2 class="text-lg font-bold text-slate-900 mb-1">Agregar a Venta</h2>
+      <p class="text-sm text-slate-500 mb-5">
+        {{ data.grupo.marcaVehiculo }} {{ data.grupo.modeloVehiculo }} {{ data.grupo.anioVehiculo }} · {{ data.grupo.tipoVidrio }} · {{ data.grupo.calidadVidrio }}
+      </p>
+
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-4 bg-slate-50 rounded-lg p-4">
+          <div>
+            <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Precio</p>
+            <p class="text-lg font-bold text-emerald-600">{{ data.grupo.precioVenta | currency : 'PEN' : 'S/' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Stock Total</p>
+            <p class="text-lg font-bold text-slate-800">{{ data.grupo.stockTotal }}</p>
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="w-full" *ngIf="data.grupo.productos.length > 1">
+          <mat-label>Seleccionar unidad</mat-label>
+          <mat-select [formControl]="productoSeleccionado">
+            <mat-option *ngFor="let p of data.grupo.productos" [value]="p">
+              ID: {{ p.idProducto }} · Stock: {{ p.stockActual }} · {{ p.ubicacionAlmacen || 'Sin ubicación' }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Cantidad</mat-label>
+          <input matInput type="number" [formControl]="cantidadControl" min="1" [max]="maxCantidad" />
+          <mat-hint>Máximo disponible: {{ maxCantidad }}</mat-hint>
+        </mat-form-field>
+
+        <div class="bg-blue-50 rounded-lg p-3 flex justify-between items-center">
+          <span class="text-sm text-slate-600">Placa:</span>
+          <span class="font-semibold text-slate-800 uppercase">{{ data.placa }}</span>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+        <button mat-raised-button color="primary" (click)="agregar()" [disabled]="!isValid()">
+          <mat-icon class="mr-1">add_shopping_cart</mat-icon> Agregar
+        </button>
+      </div>
+    </div>
+  `
+})
+export class AgregarVentaDialogComponent {
+  productoSeleccionado = new FormControl<ProductListDTO | null>(null);
+  cantidadControl = new FormControl(1, [Validators.required, Validators.min(1)]);
+
+  get maxCantidad(): number {
+    const prod = this.productoSeleccionado.value;
+    return prod ? prod.stockActual : this.data.grupo.stockTotal;
+  }
+
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: { grupo: ProductoAgrupadoVenta; placa: string },
+    private dialogRef: MatDialogRef<AgregarVentaDialogComponent>,
+    private fb: FormBuilder
+  ) {
+    // Si solo hay un producto, seleccionarlo automáticamente
+    if (data.grupo.productos.length === 1) {
+      this.productoSeleccionado.setValue(data.grupo.productos[0]);
+    }
+  }
+
+  isValid(): boolean {
+    const prod = this.productoSeleccionado.value;
+    const cant = this.cantidadControl.value || 0;
+    return !!prod && cant > 0 && cant <= prod.stockActual;
+  }
+
+  agregar(): void {
+    if (!this.isValid()) return;
+    this.dialogRef.close({
+      producto: this.productoSeleccionado.value,
+      cantidad: this.cantidadControl.value,
+      placa: this.data.placa
+    });
+  }
+
+  cancelar(): void {
+    this.dialogRef.close();
   }
 }

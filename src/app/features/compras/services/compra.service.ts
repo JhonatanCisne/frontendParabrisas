@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CompraDTO } from '../../../shared/models';
+import { environment } from '../../../environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CompraService {
-  private apiUrl = 'http://localhost:8080/api/compras';
+  private apiUrl = `${environment.apiUrl}/api/compras`;
 
   constructor(private http: HttpClient) {}
 

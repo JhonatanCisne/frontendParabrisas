@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { LoginRequest, AuthResponse, UsuarioDTO } from '../../shared/models';
+import { environment } from '../../environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api/usuarios';
+  private apiUrl = `${environment.apiUrl}/api/usuarios`;
   private tokenSubject = new BehaviorSubject<string | null>(localStorage.getItem('token'));
   public token$ = this.tokenSubject.asObservable();
 
@@ -45,6 +46,15 @@ export class AuthService {
   getCurrentUser(): any {
     const usuario = localStorage.getItem('usuario');
     return usuario ? JSON.parse(usuario) : null;
+  }
+
+  getCurrentUserRole(): string {
+    return (this.getCurrentUser()?.rol || '').toString().toUpperCase();
+  }
+
+  hasRole(roles: string[]): boolean {
+    const currentRole = this.getCurrentUserRole();
+    return roles.map((role) => role.toUpperCase()).includes(currentRole);
   }
 
   // Extrae el idUsuario del JWT si no está disponible en el usuario almacenado
