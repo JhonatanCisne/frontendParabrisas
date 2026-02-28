@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ProductListDTO, FiltroVidrioDTO } from '../../../shared/models';
+import { ProductListDTO, FiltroVidrioDTO, ProductoBajoStockDTO } from '../../../shared/models';
 
 @Injectable({
   providedIn: 'root'
@@ -49,5 +49,15 @@ export class ProductoService {
 
   buscarPorPlaca(placa: string): Observable<ProductListDTO[]> {
     return this.http.get<ProductListDTO[]>(`${this.apiUrl}/buscar-placa/${placa}`);
+  }
+
+  obtenerProductosBajoStock(): Observable<ProductoBajoStockDTO[]> {
+    return this.http.get<ProductoBajoStockDTO[]>(`${this.apiUrl}/bajo-stock`);
+  }
+
+  toggleStockBajoAlerta(id: number, valor: boolean): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${id}/stock-bajo-alerta`, null, {
+      params: { valor: valor.toString() }
+    });
   }
 }

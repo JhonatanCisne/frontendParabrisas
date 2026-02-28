@@ -2,6 +2,160 @@
 @import "@angular/material/prebuilt-themes/indigo-pink.css";
 @import "tailwindcss";
 
+/* ============================== */
+/* PALETA DE COLORES SOBRIOS      */
+/* ============================== */
+@theme {
+  /* Azul suave (Primary) */
+  --color-sblue-50: #F0F4FB;
+  --color-sblue-100: #DFEBF7;
+  --color-sblue-200: #C0D4EF;
+  --color-sblue-300: #9FBDE7;
+  --color-sblue-400: #8FA6DB;
+  --color-sblue-500: #6f8fe2;
+  --color-sblue-600: #5a7ac5;
+  --color-sblue-700: #4966A8;
+  --color-sblue-800: #3A528B;
+  --color-sblue-900: #2B3E6E;
+
+  /* Verde esmeralda suave (Success/Accent) */
+  --color-semerald-50: #EFF5F1;
+  --color-semerald-100: #DDE9E3;
+  --color-semerald-200: #B8D4C2;
+  --color-semerald-500: #7BAF92;
+  --color-semerald-600: #6A9A80;
+  --color-semerald-800: #4A7A5E;
+
+  /* Rosado suave (Warn/Alert) */
+  --color-srose-50: #F5ECED;
+  --color-srose-100: #F0E0E3;
+  --color-srose-200: #E0C0C6;
+  --color-srose-500: #C4929A;
+  --color-srose-600: #B07A83;
+  --color-srose-800: #8A5A62;
+
+  /* Dorado suave (Warning) */
+  --color-sgold-100: #F0EBDF;
+  --color-sgold-500: #B5A071;
+  --color-sgold-800: #7A6941;
+
+  /* Lavanda suave */
+  --color-slavender-100: #EBE4F0;
+  --color-slavender-500: #9B85B0;
+  --color-slavender-800: #6A5580;
+}
+
+/* ============================== */
+/* MATERIAL THEME OVERRIDES       */
+/* ============================== */
+:root {
+  /* Primary → Azul #6f8fe2 */
+  --mat-toolbar-container-background-color: #6f8fe2;
+  --mat-toolbar-container-text-color: #ffffff;
+  --mdc-filled-button-container-color: #6f8fe2;
+  --mdc-filled-button-label-text-color: #ffffff;
+  --mdc-protected-button-label-text-color: #6f8fe2;
+  --mdc-text-button-label-text-color: #6f8fe2;
+  --mat-fab-container-color: #6f8fe2;
+  --mdc-outlined-button-label-text-color: #6f8fe2;
+  --mdc-outlined-button-outline-color: #6f8fe2;
+
+  /* Accent → Azul */
+  --mat-icon-button-state-layer-color: #6f8fe2;
+
+  /* Tab indicator */
+  --mdc-tab-indicator-active-indicator-color: #6f8fe2;
+  --mat-tab-header-active-label-text-color: #6f8fe2;
+  --mat-tab-header-active-focus-label-text-color: #6f8fe2;
+  --mat-tab-header-active-hover-label-text-color: #6f8fe2;
+  --mat-tab-header-active-focus-indicator-color: #6f8fe2;
+  --mat-tab-header-active-hover-indicator-color: #6f8fe2;
+
+  /* Form field focus */
+  --mdc-filled-text-field-focus-active-indicator-color: #6f8fe2;
+  --mdc-filled-text-field-focus-label-text-color: #6f8fe2;
+  --mdc-outlined-text-field-focus-outline-color: #6f8fe2;
+  --mdc-outlined-text-field-focus-label-text-color: #6f8fe2;
+
+  /* Checkbox / Radio */
+  --mdc-checkbox-selected-checkmark-color: #ffffff;
+  --mdc-checkbox-selected-focus-icon-color: #6f8fe2;
+  --mdc-checkbox-selected-hover-icon-color: #6f8fe2;
+  --mdc-checkbox-selected-icon-color: #6f8fe2;
+  --mdc-checkbox-selected-pressed-icon-color: #6f8fe2;
+
+  /* Progress spinner */
+  --mdc-circular-progress-active-indicator-color: #6f8fe2;
+
+  /* Select */
+  --mat-select-focused-arrow-color: #6f8fe2;
+}
+
+/* Material Primary Override */
+.mat-primary {
+  --mdc-filled-button-container-color: #6f8fe2 !important;
+  --mdc-filled-button-label-text-color: #ffffff !important;
+}
+
+/* Material Accent Override */
+.mat-accent {
+  --mdc-filled-button-container-color: #6f8fe2 !important;
+  --mdc-filled-button-label-text-color: #ffffff !important;
+}
+
+/* Material Warn Override */
+.mat-warn {
+  --mdc-filled-button-container-color: #6f8fe2 !important;
+  --mdc-filled-button-label-text-color: #ffffff !important;
+}
+
+/* ============================== */
+/* FORCE OVERRIDES (prebuilt theme) */
+/* ============================== */
+
+/* Toolbar */
+.mat-toolbar.mat-primary,
+.mat-toolbar {
+  background-color: #6f8fe2 !important;
+  color: #ffffff !important;
+}
+
+/* Raised/Flat Buttons — Primary */
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary {
+  background-color: #6f8fe2 !important;
+  color: #ffffff !important;
+}
+
+/* Raised/Flat Buttons — Accent */
+.mat-mdc-raised-button.mat-accent,
+.mat-mdc-unelevated-button.mat-accent {
+  background-color: #5a7ac5 !important;
+  color: #ffffff !important;
+}
+
+/* Raised/Flat Buttons — Warn */
+.mat-mdc-raised-button.mat-warn,
+.mat-mdc-unelevated-button.mat-warn {
+  background-color: #6f8fe2 !important;
+  color: #ffffff !important;
+}
+
+/* Icon Buttons — Primary */
+.mat-mdc-icon-button.mat-primary {
+  color: #6f8fe2 !important;
+}
+
+/* Icon Buttons — Accent */
+.mat-mdc-icon-button.mat-accent {
+  color: #6f8fe2 !important;
+}
+
+/* Icon Buttons — Warn (delete etc) */
+.mat-mdc-icon-button.mat-warn {
+  color: #C4929A !important;
+}
+
 /* Reset and Base Styles */
 * {
   margin: 0;
@@ -34,26 +188,27 @@ app-root {
 }
 
 .mat-sidenav {
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  background: linear-gradient(180deg, #6f8fe2 0%, #5a7ac5 100%);
 }
 
 .mat-sidenav-content {
   background-color: #f3f4f6;
+  padding-left: 2rem !important;
 }
 
 /* Snackbar Styles */
 .error-snackbar {
-  background-color: #dc2626 !important;
+  background-color: #C4929A !important;
   color: white !important;
 }
 
 .success-snackbar {
-  background-color: #16a34a !important;
+  background-color: #7BAF92 !important;
   color: white !important;
 }
 
 .warning-snackbar {
-  background-color: #ea580c !important;
+  background-color: #B5A071 !important;
   color: white !important;
 }
 
@@ -105,3 +260,201 @@ app-root {
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
+/* ============================== */
+/* RESPONSIVE DESIGN STYLES      */
+/* ============================== */
+
+/* Mobile First Approach */
+@media (max-width: 640px) {
+  /* Reduce padding on small screens */
+  body {
+    font-size: 13px;
+  }
+
+  .mat-mdc-dialog {
+    max-width: 95vw !important;
+  }
+
+  /* Tab Navigation */
+  :host ::ng-deep .mat-mdc-tab-labels {
+    min-width: auto !important;
+  }
+
+  :host ::ng-deep .mat-mdc-tab-label {
+    min-width: auto !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* Tables - Hide non-essential columns on mobile */
+  table tr th,
+  table tr td {
+    padding: 8px 4px !important;
+    font-size: 12px !important;
+  }
+
+  /* Form Fields */
+  .mat-mdc-form-field {
+    margin-bottom: 12px !important;
+  }
+
+  /* Full width buttons */
+  button[mat-raised-button],
+  button[mat-stroked-button],
+  button[mat-flat-button] {
+    width: 100% !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* Card padding reduction */
+  .mat-mdc-card {
+    margin: 8px !important;
+    padding: 12px !important;
+  }
+
+  .mat-mdc-card-header {
+    padding: 12px !important;
+  }
+
+  .mat-mdc-card-content {
+    padding: 12px !important;
+  }
+}
+
+/* Tablet Styles (640px - 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  body {
+    font-size: 13.5px;
+  }
+
+  table tr th,
+  table tr td {
+    padding: 10px 8px !important;
+    font-size: 12.5px !important;
+  }
+
+  :host ::ng-deep .mat-mdc-tab-label {
+    padding: 0 16px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Large Screens (1025px+) */
+@media (min-width: 1025px) {
+  body {
+    font-size: 14px;
+  }
+
+  table tr th,
+  table tr td {
+    padding: 12px !important;
+    font-size: 14px !important;
+  }
+
+  :host ::ng-deep .mat-mdc-tab-label {
+    padding: 0 24px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* Responsive Grid Layout */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stack columns on mobile */
+  .grid.grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid.grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Allow column spanning only on larger screens */
+  .col-span-2,
+  .col-span-3,
+  .col-span-4 {
+    grid-column: 1 !important;
+  }
+}
+
+/* Responsive Text Sizes */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  h3 {
+    font-size: 1.1rem !important;
+  }
+
+  h4 {
+    font-size: 1rem !important;
+  }
+}
+
+/* Better spacing for mobile */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    font-size: 0.875rem;
+  }
+
+  /* Allow horizontal scrolling with better UX */
+  .overflow-x-auto table {
+    min-width: 500px;
+  }
+
+  /* Sticky first column on tables */
+  table th:first-child,
+  table td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: inherit;
+    z-index: 1;
+  }
+}
+
+/* Touch-friendly targets */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 10px 16px !important;
+  }
+
+  a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* Landscape orientation specifics */
+@media (max-height: 500px) and (orientation: landscape) {
+  .mat-toolbar {
+    height: 48px !important;
+  }
+
+  body {
+    padding: 0 !important;
+  }
+}

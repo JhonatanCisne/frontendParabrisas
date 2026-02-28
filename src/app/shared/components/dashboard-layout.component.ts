@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -25,7 +25,7 @@ import { AuthService } from '../../core/services/auth.service';
       <button mat-icon-button (click)="sidenav.toggle()">
         <mat-icon>menu</mat-icon>
       </button>
-      <span class="flex-grow">Parabrisas Cisneros - Sistema de Gestión</span>
+      <span class="flex-grow">Parabrisas Cisneros</span>
       <div class="flex items-center gap-4">
         <span class="text-sm">{{ currentUser?.nombres }} {{ currentUser?.apellidos }} ({{ currentUser?.rol }})</span>
         <button mat-button (click)="logout()">
@@ -36,13 +36,13 @@ import { AuthService } from '../../core/services/auth.service';
     </mat-toolbar>
 
     <mat-sidenav-container class="min-h-screen bg-gray-100">
-      <mat-sidenav #sidenav class="w-64 bg-gray-800" mode="side" [opened]="!isMobile">
-        <mat-nav-list class="pt-4">
+      <mat-sidenav #sidenav class="w-64" mode="side" [opened]="!isMobile">
+        <mat-nav-list class="pt-4 px-2">
           <mat-list-item
             *ngFor="let item of menuItems"
             [routerLink]="item.route"
-            routerLinkActive="bg-blue-600"
-            class="text-white hover:bg-gray-700"
+            routerLinkActive="active-item"
+            class="text-white nav-item"
           >
             <mat-icon matListItemIcon class="text-white">{{ item.icon }}</mat-icon>
             <span matListItemTitle class="text-white">{{ item.label }}</span>
@@ -50,7 +50,7 @@ import { AuthService } from '../../core/services/auth.service';
         </mat-nav-list>
       </mat-sidenav>
 
-      <mat-sidenav-content class="p-6">
+      <mat-sidenav-content class="content-area">
         <router-outlet></router-outlet>
       </mat-sidenav-content>
     </mat-sidenav-container>
@@ -61,6 +61,10 @@ import { AuthService } from '../../core/services/auth.service';
         height: calc(100vh - 64px);
       }
 
+      .content-area {
+        padding: 2rem 2.5rem;
+      }
+
       mat-nav-list {
         padding-top: 1rem;
       }
@@ -68,22 +72,26 @@ import { AuthService } from '../../core/services/auth.service';
       mat-list-item {
         height: auto !important;
         padding: 0.5rem 1rem;
+        margin-bottom: 0.25rem;
+        border-radius: 8px;
       }
 
-      .bg-blue-600 {
-        background-color: #2563eb;
+      .nav-item:hover {
+        background-color: rgba(255, 255, 255, 0.15);
       }
 
-      .hover\\:bg-gray-700:hover {
-        background-color: #374151;
+      .active-item {
+        background-color: rgba(255, 255, 255, 0.25) !important;
       }
     `
   ]
 })
-export class DashboardLayoutComponent implements OnInit {
+export class DashboardLayoutComponent implements OnInit, OnDestroy {
   currentUser: any;
-  isMobile = false;
+  isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+  private resizeListener: () => void;
   menuItems = [
+    { label: 'Estadísticas', icon: 'bar_chart', route: '/dashboard/estadisticas' },
     { label: 'Catálogo', icon: 'inventory', route: '/dashboard/catalogo' },
     { label: 'Ventas', icon: 'shopping_cart', route: '/dashboard/ventas' },
     { label: 'Compras', icon: 'shopping_bag', route: '/dashboard/compras' },
@@ -91,14 +99,24 @@ export class DashboardLayoutComponent implements OnInit {
     { label: 'Usuarios', icon: 'people', route: '/dashboard/usuarios' }
   ];
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService, 
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.resizeListener = () => {
+      this.isMobile = window.innerWidth < 768;
+      this.cdr.detectChanges();
+    };
+  }
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    this.isMobile = window.innerWidth < 768;
-    window.addEventListener('resize', () => {
-      this.isMobile = window.innerWidth < 768;
-    });
+    window.addEventListener('resize', this.resizeListener);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('resize', this.resizeListener);
   }
 
   logout(): void {

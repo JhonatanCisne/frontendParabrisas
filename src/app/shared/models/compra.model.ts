@@ -10,6 +10,7 @@ export interface DetalleListCompraDTO {
   costoCompra: number;
   precioVenta?: number;
   cantidad: number;
+  ubicacionAlmacen: string;
 }
 
 export interface CompraDTO {

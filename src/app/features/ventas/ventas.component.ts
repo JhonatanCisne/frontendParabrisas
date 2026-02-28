@@ -125,7 +125,7 @@ interface DetalleVentaManual {
                         <td class="border p-3">{{ detalle.placaVehiculo }}</td>
                         <td class="border p-3 text-center font-semibold">{{ detalle.cantidad }}</td>
                         <td class="border p-3 text-right">{{ detalle.precioVenta | currency : 'PEN' : 'S/' }}</td>
-                        <td class="border p-3 text-right font-bold text-green-600">{{ detalle.subtotal | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-3 text-right font-bold text-semerald-500">{{ detalle.subtotal | currency : 'PEN' : 'S/' }}</td>
                         <td class="border p-3 text-center">
                           <button mat-raised-button color="warn" (click)="eliminarDetalle(i)" size="small">
                             Eliminar
@@ -159,7 +159,7 @@ interface DetalleVentaManual {
                       <span>Total Unidades:</span>
                       <strong>{{ totalUnidades }}</strong>
                     </div>
-                    <div class="text-xl font-bold text-green-600 flex justify-between py-2">
+                    <div class="text-xl font-bold text-semerald-500 flex justify-between py-2">
                       <span>Total Venta:</span>
                       <span>{{ totalVenta | currency : 'PEN' : 'S/' }}</span>
                     </div>
@@ -254,7 +254,7 @@ interface DetalleVentaManual {
                 </div>
               </div>
 
-              <div *ngIf="ventaNoEncontrada && !isLoadingBusqueda" class="p-6 text-center text-red-600 bg-red-50 rounded-lg">
+              <div *ngIf="ventaNoEncontrada && !isLoadingBusqueda" class="p-6 text-center text-srose-500 bg-srose-50 rounded-lg">
                 No se encontraron ventas con los criterios especificados
               </div>
             </div>
@@ -287,12 +287,12 @@ interface DetalleVentaManual {
                       <tr class="hover:bg-gray-50 border-b cursor-pointer" (click)="toggleExpandVenta(venta.idVenta || 0)">
                         <td class="border p-3 text-center font-semibold">{{ venta.idVenta }}</td>
                         <td class="border p-3 font-semibold">{{ venta.placaVehiculo || venta.detalles?.[0]?.placaVehiculo || 'N/A' }}</td>
-                        <td class="border p-3 text-right font-bold text-green-600">{{ venta.totalVenta | currency : 'PEN' : 'S/' }}</td>
+                        <td class="border p-3 text-right font-bold text-semerald-500">{{ venta.totalVenta | currency : 'PEN' : 'S/' }}</td>
                         <td class="border p-3">{{ venta.fecha | date : 'short' }}</td>
                       </tr>
                       <!-- Filas Detalles (Expandidas) -->
                       <ng-container *ngIf="expandedVentaId === venta.idVenta && venta.detalles && venta.detalles.length > 0">
-                        <tr *ngFor="let detalle of venta.detalles; trackBy: trackByDetalleVenta" class="bg-green-50 border-b">
+                        <tr *ngFor="let detalle of venta.detalles; trackBy: trackByDetalleVenta" class="bg-semerald-50 border-b">
                           <td class="border p-2 text-sm">
                             <span class="font-semibold">{{ detalle.marcaVehiculo }} {{ detalle.modeloVehiculo }}</span>
                             <br/>
@@ -301,7 +301,7 @@ interface DetalleVentaManual {
                           <td class="border p-2 text-sm">{{ detalle.placaVehiculo }}</td>
                           <td class="border p-2 text-right">
                             <div class="text-sm">Cant: {{ detalle.cantidad }}</div>
-                            <div class="font-semibold text-green-600">{{ (detalle.precioVenta * detalle.cantidad) | currency : 'PEN' : 'S/' }}</div>
+                            <div class="font-semibold text-semerald-500">{{ (detalle.precioVenta * detalle.cantidad) | currency : 'PEN' : 'S/' }}</div>
                           </td>
                           <td class="border p-2"></td>
                         </tr>

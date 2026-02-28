@@ -9,6 +9,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ProductoService } from './services/producto.service';
 import { ProductListDTO, FiltroVidrioDTO } from '../../shared/models';
 
@@ -25,7 +27,9 @@ import { ProductListDTO, FiltroVidrioDTO } from '../../shared/models';
     MatIconModule,
     MatSelectModule,
     MatProgressSpinnerModule,
-    MatBadgeModule
+    MatBadgeModule,
+    MatCheckboxModule,
+    MatSnackBarModule
   ],
   template: `
     <div>
@@ -46,8 +50,13 @@ import { ProductListDTO, FiltroVidrioDTO } from '../../shared/models';
             </mat-form-field>
 
             <mat-form-field>
-              <mat-label>Año</mat-label>
-              <input matInput formControlName="anioVehiculo" placeholder="Ej: 2024" />
+              <mat-label>Año Desde</mat-label>
+              <input matInput formControlName="anioDesde" placeholder="Ej: 2020" type="number" />
+            </mat-form-field>
+
+            <mat-form-field>
+              <mat-label>Año Hasta</mat-label>
+              <input matInput formControlName="anioHasta" placeholder="Ej: 2024" type="number" />
             </mat-form-field>
 
             <mat-form-field>
@@ -144,12 +153,12 @@ import { ProductListDTO, FiltroVidrioDTO } from '../../shared/models';
               <td
                 mat-cell
                 *matCellDef="let element"
-                [class]="element.stockActual <= 5 ? 'text-red-600 font-semibold' : ''"
+                [class]="element.stockBajoAlerta && element.stockActual <= 1 ? 'text-srose-500 font-semibold' : ''"
               >
                 {{ element.stockActual }}
                 <mat-icon
-                  *ngIf="element.stockActual <= 5"
-                  class="text-red-600 text-lg align-middle"
+                  *ngIf="element.stockBajoAlerta && element.stockActual <= 1"
+                  class="text-srose-500 text-lg align-middle"
                   matBadge="!"
                   matBadgeColor="warn"
                 >
@@ -164,6 +173,20 @@ import { ProductListDTO, FiltroVidrioDTO } from '../../shared/models';
                 Ubicación
               </th>
               <td mat-cell *matCellDef="let element">{{ element.ubicacionAlmacen }}</td>
+            </ng-container>
+
+            <!-- Columna Stock Bajo Alerta -->
+            <ng-container matColumnDef="stockBajoAlerta">
+              <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold text-center">
+                Bajo Stock
+              </th>
+              <td mat-cell *matCellDef="let element" class="text-center">
+                <mat-checkbox
+                  [checked]="element.stockBajoAlerta"
+                  (change)="toggleAlerta(element, $event.checked)"
+                  color="warn"
+                ></mat-checkbox>
+              </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -204,13 +227,14 @@ export class CatalogoComponent implements OnInit {
   productosCompletos: ProductListDTO[] = [];
   isLoading = false;
   filterForm: FormGroup;
-  displayedColumns: string[] = ['marca', 'modelo', 'anio', 'tipoVidrio', 'calidad', 'precio', 'stock', 'ubicacion'];
+  displayedColumns: string[] = ['marca', 'modelo', 'anio', 'tipoVidrio', 'calidad', 'precio', 'stock', 'ubicacion', 'stockBajoAlerta'];
 
-  constructor(private productoService: ProductoService, private fb: FormBuilder, private cdr: ChangeDetectorRef) {
+  constructor(private productoService: ProductoService, private fb: FormBuilder, private cdr: ChangeDetectorRef, private snackBar: MatSnackBar) {
     this.filterForm = this.fb.group({
       marcaVehiculo: [''],
       modeloVehiculo: [''],
-      anioVehiculo: [''],
+      anioDesde: [null],
+      anioHasta: [null],
       tipoVidrio: [''],
       calidadVidrio: [''],
       nombreProveedor: ['']
@@ -253,9 +277,13 @@ export class CatalogoComponent implements OnInit {
           !producto.modeloVehiculo.toLowerCase().includes(filtroRaw.modeloVehiculo.toLowerCase())) {
         return false;
       }
-      if (filtroRaw.anioVehiculo && 
-          !producto.anioVehiculo.toLowerCase().includes(filtroRaw.anioVehiculo.toLowerCase())) {
-        return false;
+      if (filtroRaw.anioDesde || filtroRaw.anioHasta) {
+        const anioProducto = parseInt(producto.anioVehiculo);
+        const anioDesde = filtroRaw.anioDesde ? parseInt(filtroRaw.anioDesde) : 0;
+        const anioHasta = filtroRaw.anioHasta ? parseInt(filtroRaw.anioHasta) : 9999;
+        if (anioProducto < anioDesde || anioProducto > anioHasta) {
+          return false;
+        }
       }
       if (filtroRaw.tipoVidrio && 
           !producto.tipoVidrio.toLowerCase().includes(filtroRaw.tipoVidrio.toLowerCase())) {
@@ -279,5 +307,26 @@ export class CatalogoComponent implements OnInit {
   onReset(): void {
     this.filterForm.reset();
     this.cargarProductos();
+  }
+
+  toggleAlerta(producto: ProductListDTO, checked: boolean): void {
+    this.productoService.toggleStockBajoAlerta(producto.idProducto, checked).subscribe({
+      next: () => {
+        producto.stockBajoAlerta = checked;
+        this.snackBar.open(
+          checked ? 'Producto marcado como bajo stock' : 'Alerta de bajo stock removida',
+          'Cerrar',
+          { duration: 2000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['success-snackbar'] }
+        );
+      },
+      error: (err) => {
+        console.error('Error al actualizar alerta:', err);
+        producto.stockBajoAlerta = !checked;
+        this.cdr.detectChanges();
+        this.snackBar.open('Error al actualizar la alerta', 'Cerrar', {
+          duration: 3000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['error-snackbar']
+        });
+      }
+    });
   }
 }

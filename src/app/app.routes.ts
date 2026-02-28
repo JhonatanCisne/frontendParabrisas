@@ -6,6 +6,7 @@ import { VentasComponent } from './features/ventas/ventas.component';
 import { ComprasComponent } from './features/compras/compras.component';
 import { ProveedoresComponent } from './features/proveedores/proveedores.component';
 import { UsuariosComponent } from './features/usuarios/usuarios.component';
+import { EstadisticasComponent } from './features/estadisticas/estadisticas.component';
 import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -16,7 +17,8 @@ export const routes: Routes = [
     component: DashboardLayoutComponent,
     canActivate: [AuthGuard],
     children: [
-      { path: '', redirectTo: 'catalogo', pathMatch: 'full' },
+      { path: '', redirectTo: 'estadisticas', pathMatch: 'full' },
+      { path: 'estadisticas', component: EstadisticasComponent },
       { path: 'catalogo', component: CatalogoComponent },
       { path: 'ventas', component: VentasComponent },
       { path: 'compras', component: ComprasComponent },
