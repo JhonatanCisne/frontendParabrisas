@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,8 +23,15 @@ import { AuthService } from '../../core/services/auth.service';
     MatTooltipModule
   ],
   template: `
-    <mat-sidenav-container class="dashboard-container">
-      <mat-sidenav #sidenav class="w-64" mode="side" [opened]="!isMobile">
+    <mat-sidenav-container class="dashboard-container" [hasBackdrop]="isMobile">
+      <mat-sidenav
+        #sidenav
+        class="sidebar-drawer"
+        [mode]="isMobile ? 'over' : 'side'"
+        [opened]="!isMobile"
+        [fixedInViewport]="isMobile"
+        [fixedTopGap]="isMobile ? 56 : 0"
+      >
         <!-- Sidebar Header / Brand -->
         <div class="sidebar-brand">
           <div class="brand-icon">
@@ -44,6 +51,7 @@ import { AuthService } from '../../core/services/auth.service';
             [routerLink]="item.route"
             routerLinkActive="active-item"
             class="nav-item"
+            (click)="maybeCloseSidenav(sidenav)"
           >
             <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
             <span matListItemTitle class="nav-label">{{ item.label }}</span>
@@ -70,7 +78,7 @@ import { AuthService } from '../../core/services/auth.service';
       <mat-sidenav-content class="content-area">
         <!-- Top Bar -->
         <div class="topbar">
-          <button mat-icon-button (click)="sidenav.toggle()" class="menu-btn">
+          <button mat-icon-button (click)="sidenav.toggle()" class="menu-btn" aria-label="Abrir menú">
             <mat-icon>menu</mat-icon>
           </button>
           <div class="topbar-spacer"></div>
@@ -86,7 +94,7 @@ import { AuthService } from '../../core/services/auth.service';
   styles: [
     `
       .dashboard-container {
-        height: 100vh;
+        min-height: 100vh;
       }
 
       /* ---- Sidebar ---- */
@@ -95,6 +103,11 @@ import { AuthService } from '../../core/services/auth.service';
         border-right: none !important;
         display: flex;
         flex-direction: column;
+        width: 260px;
+      }
+
+      .sidebar-drawer {
+        max-width: 320px;
       }
 
       .sidebar-brand {
@@ -275,6 +288,7 @@ import { AuthService } from '../../core/services/auth.service';
 
       .menu-btn {
         color: #475569 !important;
+        margin-right: 12px;
       }
 
       .topbar-spacer {
@@ -289,6 +303,49 @@ import { AuthService } from '../../core/services/auth.service';
       .page-content {
         padding: 28px 32px;
         max-width: 1440px;
+      }
+
+      @media (max-width: 1024px) {
+        .page-content {
+          padding: 24px;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .dashboard-container {
+          min-height: 100vh;
+        }
+
+        mat-sidenav {
+          width: 80vw;
+          max-width: 320px;
+        }
+
+        .sidebar-footer {
+          flex-wrap: wrap;
+        }
+
+        .topbar {
+          padding: 0 16px;
+        }
+
+        .menu-btn {
+          display: inline-flex;
+        }
+
+        .content-area {
+          padding-bottom: 40px;
+        }
+
+        .page-content {
+          padding: 20px 16px;
+        }
+      }
+
+      @media (min-width: 768px) {
+        .menu-btn {
+          display: none;
+        }
       }
     `
   ]
@@ -336,5 +393,11 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  maybeCloseSidenav(drawer: MatSidenav): void {
+    if (this.isMobile) {
+      drawer.close();
+    }
   }
 }
