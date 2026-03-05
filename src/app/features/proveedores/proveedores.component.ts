@@ -30,63 +30,72 @@ import { ProveedorDTO } from '../../shared/models';
   ],
   template: `
     <div>
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Gestión de Proveedores</h1>
-        <button mat-raised-button color="primary" (click)="openDialog()">
-          <mat-icon>add</mat-icon>
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <mat-icon style="color:white;font-size:22px;width:22px;height:22px">local_shipping</mat-icon>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900" style="letter-spacing:-0.02em">Proveedores</h1>
+            <p class="text-sm text-slate-500 mt-0.5">Gestiona tus proveedores y créditos</p>
+          </div>
+        </div>
+        <button mat-raised-button color="primary" (click)="openDialog()" class="w-full md:w-auto">
+          <mat-icon class="mr-1">add</mat-icon>
           Nuevo Proveedor
         </button>
       </div>
 
-      <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div *ngIf="isLoading" class="flex justify-center p-8">
           <mat-spinner diameter="40"></mat-spinner>
         </div>
 
-        <table mat-table [dataSource]="proveedores" *ngIf="!isLoading && proveedores.length > 0">
+        <div class="overflow-x-auto" *ngIf="!isLoading && proveedores.length > 0">
+        <table mat-table [dataSource]="proveedores" class="min-w-[640px]">
           <ng-container matColumnDef="nombre">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
+            <th mat-header-cell *matHeaderCellDef class="bg-slate-50">
               Nombre del Proveedor
             </th>
-            <td mat-cell *matCellDef="let element">{{ element.nombreProveedor }}</td>
+            <td mat-cell *matCellDef="let element" class="font-medium text-slate-900">{{ element.nombreProveedor }}</td>
           </ng-container>
 
           <ng-container matColumnDef="telefono">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
+            <th mat-header-cell *matHeaderCellDef class="bg-slate-50">
               Teléfono
             </th>
-            <td mat-cell *matCellDef="let element">{{ element.telefono }}</td>
+            <td mat-cell *matCellDef="let element" class="text-slate-600">{{ element.telefono }}</td>
           </ng-container>
 
           <ng-container matColumnDef="direccion">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
+            <th mat-header-cell *matHeaderCellDef class="bg-slate-50">
               Dirección
             </th>
-            <td mat-cell *matCellDef="let element">{{ element.direccion }}</td>
+            <td mat-cell *matCellDef="let element" class="text-slate-600">{{ element.direccion }}</td>
           </ng-container>
 
           <ng-container matColumnDef="estadoCredito">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
+            <th mat-header-cell *matHeaderCellDef class="bg-slate-50">
               Estado de Crédito
             </th>
             <td mat-cell *matCellDef="let element">
-              <span class="px-3 py-1 rounded-full text-sm font-medium" [ngClass]="getEstadoClass(element.estadoCredito)">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold" [ngClass]="getEstadoClass(element.estadoCredito)">
                 {{ element.estadoCredito || 'Sin Definir' }}
               </span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="montoCredito">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
+            <th mat-header-cell *matHeaderCellDef class="bg-slate-50">
               Monto de Crédito
             </th>
-            <td mat-cell *matCellDef="let element">
+            <td mat-cell *matCellDef="let element" class="font-semibold text-slate-700">
               {{ element.montoCredito ? (element.montoCredito | currency : 'PEN' : 'S/') : 'Sin Definir' }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-100 font-semibold">
+            <th mat-header-cell *matHeaderCellDef class="bg-slate-50">
               Acciones
             </th>
             <td mat-cell *matCellDef="let element">
@@ -112,7 +121,7 @@ import { ProveedorDTO } from '../../shared/models';
                 (click)="eliminarProveedor(element.idProveedor!)"
                 matTooltip="Eliminar"
               >
-                <mat-icon>delete</mat-icon>
+                <mat-icon>delete_outline</mat-icon>
               </button>
             </td>
           </ng-container>
@@ -120,9 +129,11 @@ import { ProveedorDTO } from '../../shared/models';
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
+        </div>
 
-        <div *ngIf="!isLoading && proveedores.length === 0" class="p-8 text-center text-gray-500">
-          No hay proveedores registrados
+        <div *ngIf="!isLoading && proveedores.length === 0" class="py-12 text-center text-slate-400 text-sm">
+          <mat-icon style="font-size:40px;width:40px;height:40px;opacity:0.4" class="mb-2">local_shipping</mat-icon>
+          <p>No hay proveedores registrados</p>
         </div>
       </div>
     </div>
@@ -134,17 +145,22 @@ import { ProveedorDTO } from '../../shared/models';
       }
 
       th {
-        padding: 1rem;
+        padding: 0.875rem 1rem;
         text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
       }
 
       td {
-        padding: 1rem;
-        border-bottom: 1px solid #e5e7eb;
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
       }
 
       tr:hover td {
-        background-color: #f9fafb;
+        background-color: #f8fafc;
       }
     `
   ]
@@ -255,18 +271,18 @@ export class ProveedoresComponent implements OnInit {
   }
 
   getEstadoClass(estado: string | null | undefined): string {
-    if (!estado) return 'bg-gray-100 text-gray-800';
+    if (!estado) return 'bg-slate-100 text-slate-600';
     
     const estadoUpper = estado.toUpperCase();
     switch (estadoUpper) {
       case 'ACTIVO':
-        return 'bg-semerald-100 text-semerald-800';
+        return 'bg-emerald-50 text-emerald-700';
       case 'INACTIVO':
-        return 'bg-srose-100 text-srose-800';
+        return 'bg-red-50 text-red-700';
       case 'SUSPENDIDO':
-        return 'bg-sgold-100 text-sgold-800';
+        return 'bg-amber-50 text-amber-700';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-600';
     }
   }
 }
@@ -283,44 +299,46 @@ export class ProveedoresComponent implements OnInit {
     MatDialogModule
   ],
   template: `
-    <h2 mat-dialog-title>
-      {{ data.proveedor ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
-    </h2>
+    <form [formGroup]="form" (ngSubmit)="onSave()">
+      <h2 mat-dialog-title>
+        {{ data.proveedor ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
+      </h2>
 
-    <mat-dialog-content>
-      <form [formGroup]="form" class="space-y-4">
-        <mat-form-field class="w-full">
-          <mat-label>Nombre</mat-label>
-          <input matInput formControlName="nombreProveedor" required />
-          <mat-error *ngIf="form.get('nombreProveedor')?.hasError('required')">
-            El nombre es requerido
-          </mat-error>
-        </mat-form-field>
+      <mat-dialog-content>
+        <div class="space-y-4">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombreProveedor" />
+            <mat-error *ngIf="form.get('nombreProveedor')?.hasError('required')">
+              El nombre es requerido
+            </mat-error>
+          </mat-form-field>
 
-        <mat-form-field class="w-full">
-          <mat-label>Teléfono</mat-label>
-          <input matInput formControlName="telefono" required />
-          <mat-error *ngIf="form.get('telefono')?.hasError('required')">
-            El teléfono es requerido
-          </mat-error>
-        </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Teléfono</mat-label>
+            <input matInput formControlName="telefono" />
+            <mat-error *ngIf="form.get('telefono')?.hasError('required')">
+              El teléfono es requerido
+            </mat-error>
+          </mat-form-field>
 
-        <mat-form-field class="w-full">
-          <mat-label>Dirección</mat-label>
-          <input matInput formControlName="direccion" required />
-          <mat-error *ngIf="form.get('direccion')?.hasError('required')">
-            La dirección es requerida
-          </mat-error>
-        </mat-form-field>
-      </form>
-    </mat-dialog-content>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Dirección</mat-label>
+            <input matInput formControlName="direccion" />
+            <mat-error *ngIf="form.get('direccion')?.hasError('required')">
+              La dirección es requerida
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </mat-dialog-content>
 
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancelar</button>
-      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!form.valid">
-        Guardar
-      </button>
-    </mat-dialog-actions>
+      <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="onCancel()">Cancelar</button>
+        <button mat-raised-button color="primary" type="submit">
+          Guardar
+        </button>
+      </mat-dialog-actions>
+    </form>
   `
 })
 export class ProveedorFormDialogComponent {
@@ -388,37 +406,39 @@ export class ProveedorFormDialogComponent {
     MatDialogModule
   ],
   template: `
-    <h2 mat-dialog-title>
-      Editar Crédito de {{ data.proveedor.nombreProveedor }}
-    </h2>
+    <form [formGroup]="form" (ngSubmit)="onSave()">
+      <h2 mat-dialog-title>
+        Editar Crédito de {{ data.proveedor.nombreProveedor }}
+      </h2>
 
-    <mat-dialog-content>
-      <form [formGroup]="form" class="space-y-4">
-        <mat-form-field class="w-full">
-          <mat-label>Estado de Crédito</mat-label>
-          <mat-select formControlName="estadoCredito" required>
-            <mat-option value="Activo">Activo</mat-option>
-            <mat-option value="Inactivo">Inactivo</mat-option>
-            <mat-option value="Suspendido">Suspendido</mat-option>
-          </mat-select>
-        </mat-form-field>
+      <mat-dialog-content>
+        <div class="space-y-4">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Estado de Crédito</mat-label>
+            <mat-select formControlName="estadoCredito">
+              <mat-option value="Activo">Activo</mat-option>
+              <mat-option value="Inactivo">Inactivo</mat-option>
+              <mat-option value="Suspendido">Suspendido</mat-option>
+            </mat-select>
+          </mat-form-field>
 
-        <mat-form-field class="w-full">
-          <mat-label>Monto de Crédito (S/)</mat-label>
-          <input matInput type="number" formControlName="montoCredito" min="0" step="0.01" />
-          <mat-error *ngIf="form.get('montoCredito')?.hasError('min')">
-            El monto debe ser mayor o igual a 0
-          </mat-error>
-        </mat-form-field>
-      </form>
-    </mat-dialog-content>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Monto de Crédito (S/)</mat-label>
+            <input matInput type="number" formControlName="montoCredito" min="0" step="0.01" />
+            <mat-error *ngIf="form.get('montoCredito')?.hasError('min')">
+              El monto debe ser mayor o igual a 0
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </mat-dialog-content>
 
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancelar</button>
-      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!form.valid">
-        Guardar
-      </button>
-    </mat-dialog-actions>
+      <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="onCancel()">Cancelar</button>
+        <button mat-raised-button color="primary" type="submit">
+          Guardar
+        </button>
+      </mat-dialog-actions>
+    </form>
   `
 })
 export class ProveedorCreditoDialogComponent {

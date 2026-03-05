@@ -3,11 +3,17 @@ import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { ErrorResponse } from '../../shared/models';
+import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(
+    private snackBar: MatSnackBar,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
@@ -19,7 +25,9 @@ export class ErrorInterceptor implements HttpInterceptor {
         }
 
         if (error.status === 401) {
-          errorMessage = 'No autorizado. Por favor, inicie sesión nuevamente.';
+          errorMessage = 'Sesión expirada. Por favor, inicie sesión nuevamente.';
+          this.authService.logout();
+          this.router.navigate(['/login']);
         } else if (error.status === 403) {
           errorMessage = 'No tiene permiso para realizar esta acción.';
         } else if (error.status === 404) {

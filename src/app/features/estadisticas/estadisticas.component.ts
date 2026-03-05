@@ -38,7 +38,15 @@ import { jsPDF } from 'jspdf';
   styleUrls: ['./estadisticas.component.css'],
   template: `
     <div class="container mx-auto p-4 md:p-6 estadisticas-container">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Estadísticas del Sistema</h1>
+      <div class="flex items-center gap-3 mb-2">
+        <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <mat-icon style="color:white;font-size:22px;width:22px;height:22px">bar_chart</mat-icon>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900" style="letter-spacing:-0.02em">Estadísticas del Sistema</h1>
+          <p class="text-sm text-slate-500 mt-0.5">Resumen general y reportes</p>
+        </div>
+      </div>
 
       <!-- Tarjetas de Estadísticas -->
       <div class="estadisticas-grid">
@@ -46,20 +54,20 @@ import { jsPDF } from 'jspdf';
         <mat-card>
           <mat-card-content class="p-6">
             <div class="flex items-center justify-center mb-6">
-              <mat-icon class="text-5xl text-sblue-500" style="font-size: 48px; height: 48px; width: 48px">
+              <mat-icon class="text-5xl text-blue-500" style="font-size: 48px; height: 48px; width: 48px">
                 trending_up
               </mat-icon>
             </div>
-            <h3 class="text-base font-semibold text-gray-600 text-center mb-4">Vidrio Más Vendido</h3>
+            <h3 class="text-base font-semibold text-slate-500 text-center mb-4">Vidrio Más Vendido</h3>
             <div class="space-y-2 text-sm">
               <ng-container *ngIf="estadisticas?.vidrioMasVendido as vidrio">
-                <p class="text-gray-500">Marca: <span class="font-bold text-gray-800 block">{{ vidrio.marcaVehiculo }}</span></p>
-                <p class="text-gray-500 mt-2">Modelo: <span class="font-bold text-gray-800 block">{{ vidrio.modeloVehiculo }}</span></p>
-                <p class="text-gray-500 mt-2">Año: <span class="font-bold text-gray-800 block">{{ vidrio.anioVehiculo }}</span></p>
-                <p class="text-gray-500 mt-2">Tipo: <span class="font-bold text-gray-800 block">{{ vidrio.tipoVidrio }}</span></p>
+                <p class="text-slate-400">Marca: <span class="font-bold text-slate-800 block">{{ vidrio.marcaVehiculo }}</span></p>
+                <p class="text-slate-400 mt-2">Modelo: <span class="font-bold text-slate-800 block">{{ vidrio.modeloVehiculo }}</span></p>
+                <p class="text-slate-400 mt-2">Año: <span class="font-bold text-slate-800 block">{{ vidrio.anioVehiculo }}</span></p>
+                <p class="text-slate-400 mt-2">Tipo: <span class="font-bold text-slate-800 block">{{ vidrio.tipoVidrio }}</span></p>
               </ng-container>
               <div *ngIf="!estadisticas?.vidrioMasVendido" class="text-center">
-                <p class="text-xl font-bold text-gray-800">N/A</p>
+                <p class="text-xl font-bold text-slate-800">N/A</p>
               </div>
             </div>
           </mat-card-content>
@@ -69,12 +77,12 @@ import { jsPDF } from 'jspdf';
         <mat-card>
           <mat-card-content class="p-6 flex flex-col h-full justify-center">
             <div class="flex items-center justify-center mb-4">
-              <mat-icon class="text-5xl text-semerald-500" style="font-size: 48px; height: 48px; width: 48px">
+              <mat-icon class="text-5xl text-emerald-500" style="font-size: 48px; height: 48px; width: 48px">
                 sell
               </mat-icon>
             </div>
-            <h3 class="text-base font-semibold text-gray-600 text-center mb-3">Total Vendidos</h3>
-            <p class="text-3xl font-bold text-gray-800 text-center">
+            <h3 class="text-base font-semibold text-slate-500 text-center mb-3">Total Vendidos</h3>
+            <p class="text-3xl font-bold text-slate-800 text-center">
               {{ estadisticas?.totalVidriosVendidos || 0 }}
             </p>
           </mat-card-content>
@@ -84,12 +92,12 @@ import { jsPDF } from 'jspdf';
         <mat-card>
           <mat-card-content class="p-6 flex flex-col h-full justify-center">
             <div class="flex items-center justify-center mb-4">
-              <mat-icon class="text-5xl text-sblue-500" style="font-size: 48px; height: 48px; width: 48px">
+              <mat-icon class="text-5xl text-blue-500" style="font-size: 48px; height: 48px; width: 48px">
                 inventory_2
               </mat-icon>
             </div>
-            <h3 class="text-base font-semibold text-gray-600 text-center mb-3">Stock Total</h3>
-            <p class="text-3xl font-bold text-gray-800 text-center">
+            <h3 class="text-base font-semibold text-slate-500 text-center mb-3">Stock Total</h3>
+            <p class="text-3xl font-bold text-slate-800 text-center">
               {{ estadisticas?.totalVidriosEnStock || 0 }}
             </p>
           </mat-card-content>
@@ -99,12 +107,12 @@ import { jsPDF } from 'jspdf';
         <mat-card>
           <mat-card-content class="p-6 flex flex-col h-full justify-center">
             <div class="flex items-center justify-center mb-4">
-              <mat-icon class="text-5xl text-sblue-500" style="font-size: 48px; height: 48px; width: 48px">
+              <mat-icon class="text-5xl text-blue-500" style="font-size: 48px; height: 48px; width: 48px">
                 attach_money
               </mat-icon>
             </div>
-            <h3 class="text-base font-semibold text-gray-600 text-center mb-3">Total Ventas</h3>
-            <p class="text-3xl font-bold text-gray-800 text-center">
+            <h3 class="text-base font-semibold text-slate-500 text-center mb-3">Total Ventas</h3>
+            <p class="text-3xl font-bold text-slate-800 text-center">
               S/ {{ (estadisticas?.totalGeneralVentas || 0).toFixed(2) }}
             </p>
           </mat-card-content>
@@ -116,7 +124,7 @@ import { jsPDF } from 'jspdf';
         <div class="panel-reporte">
           <mat-card>
             <mat-card-header>
-              <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <mat-icon>warning</mat-icon>
                 Productos con Bajo Stock
               </h2>
@@ -137,6 +145,7 @@ import { jsPDF } from 'jspdf';
                       <th>Año</th>
                       <th>Tipo</th>
                       <th>Calidad</th>
+                      <th>Importadora</th>
                       <th>Stock</th>
                     </tr>
                   </thead>
@@ -147,6 +156,7 @@ import { jsPDF } from 'jspdf';
                       <td class="text-center">{{ producto.anioVehiculo }}</td>
                       <td class="text-center">{{ producto.tipoVidrio }}</td>
                       <td class="text-center">{{ producto.calidadVidrio }}</td>
+                      <td class="text-center">{{ producto.nombreProveedor }}</td>
                       <td class="text-center">
                         <span class="stock-badge">
                           {{ producto.stockActual }}
@@ -177,7 +187,7 @@ import { jsPDF } from 'jspdf';
       <div class="panel-grafico">
         <mat-card>
           <mat-card-header>
-            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
               <mat-icon>bar_chart</mat-icon>
               Ventas por Mes
             </h2>
@@ -244,10 +254,11 @@ import { jsPDF } from 'jspdf';
         margin: 0;
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
       }
       .mat-mdc-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         transition: box-shadow 0.3s ease;
       }
       .mat-mdc-card-header {
@@ -355,7 +366,7 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
 
   cargarProductosBajoStock(): void {
     this.isLoadingProductos = true;
-    this.productoService.obtenerProductosBajoStock().subscribe({
+    this.productoService.getCatalogo().subscribe({
       next: (data) => {
         this.productosBajoStock = this.agruparProductosBajoStock(data);
         this.isLoadingProductos = false;
@@ -370,23 +381,26 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   }
 
   private agruparProductosBajoStock(productos: ProductoBajoStockDTO[]): ProductoBajoStockDTO[] {
-    const mapa = new Map<string, ProductoBajoStockDTO>();
-    
-    productos.forEach(producto => {
-      // Crear clave única basada en marca, modelo, tipo, calidad y año
-      const clave = `${producto.marcaVehiculo}_${producto.modeloVehiculo}_${producto.tipoVidrio}_${producto.calidadVidrio}_${producto.anioVehiculo}`;
-      
+    const mapa = new Map<string, { agrupado: ProductoBajoStockDTO; tieneBajoStockMarcado: boolean }>();
+
+    productos.forEach((producto) => {
+      const clave = `${producto.marcaVehiculo}_${producto.modeloVehiculo}_${producto.anioVehiculo}_${producto.tipoVidrio}_${producto.calidadVidrio}_${producto.nombreProveedor}`;
+
       if (mapa.has(clave)) {
-        // Si ya existe, sumar el stock
         const existente = mapa.get(clave)!;
-        existente.stockActual += producto.stockActual;
+        existente.agrupado.stockActual += producto.stockActual;
+        existente.tieneBajoStockMarcado = existente.tieneBajoStockMarcado || !!producto.stockBajoAlerta;
       } else {
-        // Si no existe, crear nuevo registro
-        mapa.set(clave, { ...producto });
+        mapa.set(clave, {
+          agrupado: { ...producto },
+          tieneBajoStockMarcado: !!producto.stockBajoAlerta
+        });
       }
     });
-    
-    return Array.from(mapa.values());
+
+    return Array.from(mapa.values())
+      .filter((item) => item.tieneBajoStockMarcado && item.agrupado.stockActual <= 2)
+      .map((item) => item.agrupado);
   }
 
   cargarVentasPorMes(): void {
@@ -436,16 +450,16 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
           {
             label: 'Cantidad de Unidades',
             data: cantidades,
-            backgroundColor: 'rgba(111, 143, 226, 0.7)',
-            borderColor: 'rgb(111, 143, 226)',
+            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+            borderColor: 'rgb(37, 99, 235)',
             borderWidth: 1,
             yAxisID: 'y'
           },
           {
             label: 'Total en Soles',
             data: totales,
-            backgroundColor: 'rgba(107, 90, 179, 0.4)',
-            borderColor: 'rgb(107, 90, 179)',
+            backgroundColor: 'rgba(16, 185, 129, 0.5)',
+            borderColor: 'rgb(5, 150, 105)',
             borderWidth: 1,
             yAxisID: 'y1'
           }
@@ -534,8 +548,8 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
 
     // Tabla
     if (this.productosBajoStock.length > 0) {
-      const columns = ['Marca', 'Modelo', 'Año', 'Tipo', 'Calidad', 'Stock'];
-      const columnWidths = [25, 25, 15, 25, 25, 15];
+      const columns = ['Marca', 'Modelo', 'Año', 'Tipo', 'Calidad', 'Importadora', 'Stock'];
+      const columnWidths = [24, 24, 12, 24, 20, 30, 12];
       const rowHeight = 8;
       const tableStartX = 10;
       const tableStartY = currentY;
@@ -544,7 +558,7 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
       let xPos = tableStartX;
       for (let i = 0; i < columns.length; i++) {
         // Fondo azul para encabezado
-        doc.setFillColor(111, 143, 226);
+        doc.setFillColor(37, 99, 235);
         doc.rect(xPos, tableStartY, columnWidths[i], rowHeight, 'F');
         
         // Borde negro
@@ -579,7 +593,7 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
           // Repetir encabezados en nueva página
           xPos = tableStartX;
           for (let j = 0; j < columns.length; j++) {
-            doc.setFillColor(111, 143, 226);
+            doc.setFillColor(37, 99, 235);
             doc.rect(xPos, yPos, columnWidths[j], rowHeight, 'F');
             
             doc.setDrawColor(0, 0, 0);
@@ -603,7 +617,7 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
 
         // Determinar color alterno para esta fila
         const isEven = i % 2 === 0;
-        const bgColor = isEven ? [244, 242, 251] : [255, 255, 255];
+        const bgColor = isEven ? [248, 250, 252] : [255, 255, 255];
 
         // Dibujar celdas de datos
         const rowData = [
@@ -612,6 +626,7 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
           p.anioVehiculo?.toString() || '-',
           p.tipoVidrio || '-',
           p.calidadVidrio || '-',
+          p.nombreProveedor || '-',
           p.stockActual.toString()
         ];
 
@@ -661,42 +676,44 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   selector: 'app-copiar-reporte-dialog',
   template: `
     <div class="p-6">
-      <h2 mat-dialog-title class="mb-4">Copiar Reporte</h2>
+      <h2 mat-dialog-title class="mb-4 text-lg font-bold text-slate-800">Copiar Reporte</h2>
       
-      <div class="max-h-96 overflow-y-auto mb-6">
+      <div class="max-h-96 overflow-y-auto mb-6 rounded-lg border border-slate-200">
         <table class="w-full text-sm border-collapse">
-          <thead class="bg-sblue-100 sticky top-0">
+          <thead class="bg-slate-50 sticky top-0">
             <tr>
-              <th class="px-2 py-2 text-center w-8">
+              <th class="px-2 py-2.5 text-center w-8">
                 <input type="checkbox" [checked]="todoSeleccionado()" (change)="toggleTodos()" />
               </th>
-              <th class="px-2 py-2 text-left">Marca</th>
-              <th class="px-2 py-2 text-left">Modelo</th>
-              <th class="px-2 py-2 text-center">Año</th>
-              <th class="px-2 py-2 text-left">Tipo</th>
-              <th class="px-2 py-2 text-left">Calidad</th>
-              <th class="px-2 py-2 text-center">Cantidad</th>
+              <th class="px-2 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Marca</th>
+              <th class="px-2 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Modelo</th>
+              <th class="px-2 py-2.5 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Año</th>
+              <th class="px-2 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo</th>
+              <th class="px-2 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Calidad</th>
+              <th class="px-2 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Importadora</th>
+              <th class="px-2 py-2.5 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Cantidad</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let producto of productosConDatailado; let i = index" [class]="i % 2 === 0 ? 'bg-sblue-50' : 'bg-white'">
-              <td class="px-2 py-2 text-center border">
+            <tr *ngFor="let producto of productosConDatailado; let i = index" class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+              <td class="px-2 py-2 text-center">
                 <input 
                   type="checkbox" 
                   [(ngModel)]="producto.seleccionado"
                 />
               </td>
-              <td class="px-2 py-2 border">{{ producto.marcaVehiculo }}</td>
-              <td class="px-2 py-2 border">{{ producto.modeloVehiculo }}</td>
-              <td class="px-2 py-2 text-center border">{{ producto.anioVehiculo }}</td>
-              <td class="px-2 py-2 border">{{ producto.tipoVidrio }}</td>
-              <td class="px-2 py-2 border">{{ producto.calidadVidrio }}</td>
-              <td class="px-2 py-2 border">
+              <td class="px-2 py-2 font-medium text-slate-800">{{ producto.marcaVehiculo }}</td>
+              <td class="px-2 py-2 text-slate-600">{{ producto.modeloVehiculo }}</td>
+              <td class="px-2 py-2 text-center text-slate-600">{{ producto.anioVehiculo }}</td>
+              <td class="px-2 py-2 text-slate-600">{{ producto.tipoVidrio }}</td>
+              <td class="px-2 py-2 text-slate-600">{{ producto.calidadVidrio }}</td>
+              <td class="px-2 py-2 text-slate-600">{{ producto.nombreProveedor }}</td>
+              <td class="px-2 py-2 text-center">
                 <input 
                   type="number" 
                   min="0" 
                   [(ngModel)]="producto.cantidad"
-                  class="w-16 px-2 py-1 border rounded"
+                  class="w-16 px-2 py-1 border border-slate-200 rounded-lg text-center"
                   [disabled]="!producto.seleccionado"
                 />
               </td>
@@ -710,7 +727,7 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
           Cancelar
         </button>
         <button mat-raised-button color="primary" (click)="copiarSeleccionados()">
-          <mat-icon>content_copy</mat-icon>
+          <mat-icon class="mr-1">content_copy</mat-icon>
           Copiar Seleccionados
         </button>
       </div>
@@ -770,6 +787,7 @@ export class CopiarReporteDialogComponent {
       reporteTexto += `Año: ${producto.anioVehiculo}\n`;
       reporteTexto += `Tipo: ${producto.tipoVidrio}\n`;
       reporteTexto += `Calidad: ${producto.calidadVidrio}\n`;
+      reporteTexto += `Importadora: ${producto.nombreProveedor}\n`;
       reporteTexto += `Cantidad: ${producto.cantidad}`;
     });
 

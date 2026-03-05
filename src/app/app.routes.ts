@@ -10,7 +10,7 @@ import { EstadisticasComponent } from './features/estadisticas/estadisticas.comp
 import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   {
     path: 'dashboard',
@@ -18,12 +18,12 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'estadisticas', pathMatch: 'full' },
-      { path: 'estadisticas', component: EstadisticasComponent },
+      { path: 'estadisticas', component: EstadisticasComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN'] } },
       { path: 'catalogo', component: CatalogoComponent },
       { path: 'ventas', component: VentasComponent },
       { path: 'compras', component: ComprasComponent },
-      { path: 'proveedores', component: ProveedoresComponent },
-      { path: 'usuarios', component: UsuariosComponent }
+      { path: 'proveedores', component: ProveedoresComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN'] } },
+      { path: 'usuarios', component: UsuariosComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN'] } }
     ]
   },
   { path: '**', redirectTo: '/login' }
