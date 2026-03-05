@@ -750,6 +750,7 @@ export class VentasComponent implements OnInit {
           this.totalUnidades = 0;
           this.placaControl.reset();
           this.cargarProductos();
+          this.cargarHistorialVentas();
         });
       },
       error: (error: any) => {

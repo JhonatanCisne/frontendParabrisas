@@ -419,9 +419,14 @@ export class CatalogoComponent implements OnInit {
   }
 
   abrirDetalleGrupo(grupo: ProductoAgrupado): void {
-    this.dialog.open(CatalogoDetalleDialogComponent, {
+    const dialogRef = this.dialog.open(CatalogoDetalleDialogComponent, {
       width: '920px',
       data: grupo
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      // Recargar productos para reflejar cambios de stock
+      this.cargarProductos();
     });
   }
 
@@ -482,7 +487,16 @@ export class CatalogoComponent implements OnInit {
 @Component({
   selector: 'app-catalogo-detalle-dialog',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatSnackBarModule,
+    ReactiveFormsModule
+  ],
   template: `
     <div class="p-6">
       <h2 class="text-lg font-bold text-slate-900 mb-1">Detalle del grupo</h2>
@@ -517,6 +531,33 @@ export class CatalogoComponent implements OnInit {
             </td>
           </ng-container>
 
+          <ng-container matColumnDef="descontar">
+            <th mat-header-cell *matHeaderCellDef class="text-center">Descontar Stock</th>
+            <td mat-cell *matCellDef="let element" class="text-center">
+              <div class="flex items-center gap-2 justify-center">
+                <input
+                  type="number"
+                  min="1"
+                  [max]="element.stockActual"
+                  placeholder="Cant."
+                  class="stock-input"
+                  #cantidadInput
+                  [disabled]="element.stockActual <= 0"
+                />
+                <button
+                  mat-mini-fab
+                  color="warn"
+                  (click)="abrirConfirmacion(element, cantidadInput); $event.stopPropagation()"
+                  [disabled]="element.stockActual <= 0"
+                  matTooltip="Descontar stock manualmente"
+                  class="descontar-btn"
+                >
+                  <mat-icon>remove</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
@@ -526,17 +567,281 @@ export class CatalogoComponent implements OnInit {
         <button mat-raised-button color="primary" (click)="cerrar()">Cerrar</button>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .stock-input {
+      width: 64px;
+      padding: 6px 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .stock-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+    }
+    .stock-input:disabled {
+      background: #f1f5f9;
+      cursor: not-allowed;
+    }
+    .descontar-btn {
+      width: 32px !important;
+      height: 32px !important;
+      line-height: 32px !important;
+    }
+    .descontar-btn mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  `]
 })
 export class CatalogoDetalleDialogComponent {
-  displayedColumns: string[] = ['id', 'ubicacion', 'precioVenta', 'stock'];
+  displayedColumns: string[] = ['id', 'ubicacion', 'precioVenta', 'stock', 'descontar'];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: ProductoAgrupado,
-    private dialogRef: MatDialogRef<CatalogoDetalleDialogComponent>
+    private dialogRef: MatDialogRef<CatalogoDetalleDialogComponent>,
+    private productoService: ProductoService,
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {}
+
+  abrirConfirmacion(producto: ProductListDTO, input: HTMLInputElement): void {
+    const cantidad = parseInt(input.value, 10);
+    if (!cantidad || cantidad <= 0) {
+      this.snackBar.open('Ingrese una cantidad válida', 'Cerrar', {
+        duration: 3000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['error-snackbar']
+      });
+      return;
+    }
+    if (cantidad > producto.stockActual) {
+      this.snackBar.open('La cantidad excede el stock disponible', 'Cerrar', {
+        duration: 3000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    const confirmRef = this.dialog.open(ConfirmarDescontarStockDialogComponent, {
+      width: '100vw',
+      maxWidth: '100vw',
+      height: '100vh',
+      panelClass: 'fullscreen-dialog',
+      data: {
+        producto,
+        cantidad,
+        grupo: this.data
+      }
+    });
+
+    confirmRef.afterClosed().subscribe((confirmado: boolean) => {
+      if (confirmado) {
+        this.productoService.descontarStock(producto.idProducto, cantidad).subscribe({
+          next: () => {
+            producto.stockActual -= cantidad;
+            this.data.stockTotal -= cantidad;
+            input.value = '';
+            this.snackBar.open(`Stock descontado: -${cantidad} unidad(es)`, 'Cerrar', {
+              duration: 3000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['success-snackbar']
+            });
+          },
+          error: () => {
+            this.snackBar.open('Error al descontar stock', 'Cerrar', {
+              duration: 3000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['error-snackbar']
+            });
+          }
+        });
+      }
+    });
+  }
 
   cerrar(): void {
     this.dialogRef.close();
+  }
+}
+
+// ====== Dialog de confirmación fullscreen para descontar stock ======
+@Component({
+  selector: 'app-confirmar-descontar-stock-dialog',
+  standalone: true,
+  imports: [CommonModule, MatButtonModule, MatIconModule],
+  template: `
+    <div class="confirm-overlay">
+      <div class="confirm-card">
+        <!-- Icono de alerta -->
+        <div class="confirm-icon-wrapper">
+          <mat-icon class="confirm-icon">warning_amber</mat-icon>
+        </div>
+
+        <h2 class="confirm-title">Confirmar Descuento de Stock</h2>
+        <p class="confirm-subtitle">Estás a punto de realizar la siguiente operación:</p>
+
+        <!-- Detalle de la operación -->
+        <div class="confirm-details">
+          <div class="detail-row">
+            <span class="detail-label">Producto</span>
+            <span class="detail-value">
+              {{ data.grupo.marcaVehiculo }} {{ data.grupo.modeloVehiculo }} {{ data.grupo.anioVehiculo }}
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Tipo / Calidad</span>
+            <span class="detail-value">{{ data.grupo.tipoVidrio }} · {{ data.grupo.calidadVidrio }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">ID Producto</span>
+            <span class="detail-value font-mono">{{ data.producto.idProducto }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Ubicación</span>
+            <span class="detail-value">{{ data.producto.ubicacionAlmacen || 'Sin ubicación' }}</span>
+          </div>
+          <div class="detail-row highlight">
+            <span class="detail-label">Stock Actual</span>
+            <span class="detail-value font-bold">{{ data.producto.stockActual }}</span>
+          </div>
+          <div class="detail-row highlight warn">
+            <span class="detail-label">Cantidad a Descontar</span>
+            <span class="detail-value font-bold text-red-600">-{{ data.cantidad }}</span>
+          </div>
+          <div class="detail-row highlight">
+            <span class="detail-label">Stock Resultante</span>
+            <span class="detail-value font-bold text-blue-600">{{ data.producto.stockActual - data.cantidad }}</span>
+          </div>
+        </div>
+
+        <p class="confirm-warning">Esta acción no se puede deshacer</p>
+
+        <!-- Botones -->
+        <div class="confirm-actions">
+          <button mat-stroked-button class="cancel-btn" (click)="cancelar()">
+            <mat-icon class="mr-1">close</mat-icon> Cancelar
+          </button>
+          <button mat-raised-button color="warn" class="confirm-btn" (click)="confirmar()">
+            <mat-icon class="mr-1">remove_circle</mat-icon> Confirmar Descuento
+          </button>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .confirm-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+      padding: 24px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+    .confirm-card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+    }
+    .confirm-icon-wrapper {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .confirm-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      color: #d97706;
+    }
+    .confirm-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .confirm-subtitle {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 24px;
+    }
+    .confirm-details {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-row.highlight {
+      background: #f0f9ff;
+      margin: 0 -16px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #e0f2fe;
+    }
+    .detail-row.warn {
+      background: #fef2f2;
+      border-bottom-color: #fecaca;
+    }
+    .detail-label {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .detail-value {
+      font-size: 14px;
+      color: #0f172a;
+      font-weight: 600;
+    }
+    .confirm-warning {
+      font-size: 13px;
+      color: #ef4444;
+      font-weight: 500;
+      margin-bottom: 24px;
+    }
+    .confirm-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .cancel-btn, .confirm-btn {
+      flex: 1;
+      height: 48px !important;
+      font-size: 15px !important;
+      font-weight: 600 !important;
+      border-radius: 10px !important;
+    }
+  `]
+})
+export class ConfirmarDescontarStockDialogComponent {
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: { producto: ProductListDTO; cantidad: number; grupo: ProductoAgrupado },
+    private dialogRef: MatDialogRef<ConfirmarDescontarStockDialogComponent>
+  ) {}
+
+  confirmar(): void {
+    this.dialogRef.close(true);
+  }
+
+  cancelar(): void {
+    this.dialogRef.close(false);
   }
 }

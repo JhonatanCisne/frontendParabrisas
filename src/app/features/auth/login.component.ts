@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -82,6 +82,21 @@ import { AuthService } from '../../core/services/auth.service';
               <mat-spinner *ngIf="isLoading" diameter="22" class="inline-block"></mat-spinner>
             </button>
           </form>
+
+          <!-- Install PWA Banner -->
+          <div *ngIf="showInstallBanner" class="install-banner">
+            <div class="install-banner-content">
+              <mat-icon class="install-icon">install_mobile</mat-icon>
+              <div class="install-text">
+                <strong>Instalar App</strong>
+                <span>Añade Parabrisas Cisneros a tu pantalla de inicio</span>
+              </div>
+            </div>
+            <div class="install-actions">
+              <button mat-stroked-button class="install-dismiss" (click)="dismissInstall()">Ahora no</button>
+              <button mat-raised-button color="primary" class="install-accept" (click)="installPwa()">Instalar</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -220,6 +235,68 @@ import { AuthService } from '../../core/services/auth.service';
         letter-spacing: 0.01em;
       }
 
+      /* Install Banner */
+      .install-banner {
+        margin-top: 24px;
+        padding: 16px;
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        animation: slideUp 0.3s ease-out;
+      }
+
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .install-banner-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .install-icon {
+        color: #2563eb;
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+
+      .install-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .install-text strong {
+        font-size: 14px;
+        color: #1e40af;
+      }
+
+      .install-text span {
+        font-size: 12px;
+        color: #3b82f6;
+      }
+
+      .install-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .install-dismiss {
+        flex: 1;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+      }
+
+      .install-accept {
+        flex: 1;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+      }
+
       /* Responsive */
       @media (max-width: 768px) {
         .login-container {
@@ -259,9 +336,12 @@ import { AuthService } from '../../core/services/auth.service';
     `
   ]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup;
   isLoading = false;
+  showInstallBanner = false;
+  private deferredPrompt: any = null;
+  private boundBeforeInstall: ((e: Event) => void) | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -273,6 +353,59 @@ export class LoginComponent {
       correo: ['', [Validators.required, Validators.email]],
       contrasena: ['', [Validators.required, Validators.minLength(6)]]
     });
+  }
+
+  ngOnInit(): void {
+    // Si ya está autenticado, redirigir al dashboard
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
+    // Listen for PWA install prompt
+    this.boundBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      this.deferredPrompt = e;
+      // Only show if user hasn't dismissed recently
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      if (!dismissed) {
+        this.showInstallBanner = true;
+      }
+    };
+    window.addEventListener('beforeinstallprompt', this.boundBeforeInstall);
+  }
+
+  ngOnDestroy(): void {
+    if (this.boundBeforeInstall) {
+      window.removeEventListener('beforeinstallprompt', this.boundBeforeInstall);
+    }
+  }
+
+  installPwa(): void {
+    if (!this.deferredPrompt) return;
+    this.deferredPrompt.prompt();
+    this.deferredPrompt.userChoice.then((choice: any) => {
+      if (choice.outcome === 'accepted') {
+        this.snackBar.open('¡App instalada correctamente!', 'Cerrar', {
+          duration: 3000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['success-snackbar']
+        });
+      }
+      this.deferredPrompt = null;
+      this.showInstallBanner = false;
+    });
+  }
+
+  dismissInstall(): void {
+    this.showInstallBanner = false;
+    this.deferredPrompt = null;
+    // Don't show again for 7 days
+    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    setTimeout(() => {
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      if (dismissed && Date.now() - parseInt(dismissed) > 7 * 24 * 60 * 60 * 1000) {
+        localStorage.removeItem('pwa-install-dismissed');
+      }
+    }, 0);
   }
 
   onLogin(): void {
